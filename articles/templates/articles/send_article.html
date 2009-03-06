@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Send Article: {{ article.title }}{% endblock %}
+
+{% block keywords %}send article link, e-mail link{% endblock %}
+{% block description %}This page allows you to send a link to {{ article.title }} to people you think might find it useful.{% endblock %}
+
+{% block content %}
+<h2>Send Article: {{ article.title }}</h2>
+
+{% if error %}<ul class="errorlist"><li>{{ error }}</li></ul>{% endif %}
+
+<p>Please fill out the form below in order to send a link to this article to whomever you think would benefit from reading it.</p>
+
+<form action="{% url send-article article.id %}" method="post">
+<table>
+{{ form }}
+    <tr>
+        <td colspan="2" class="buttons">
+            <input type="submit" value="Send Article" />
+        </td>
+    </tr>
+</table>
+</form>
+{% endblock %}

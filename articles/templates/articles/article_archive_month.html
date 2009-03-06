@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load articles %}
+
+{% block title %}Article Archive: {{ month|date:"F Y" }}{% endblock %}
+
+{% block content %}
+{% comment %}
+<h2>Article Distribution</h2>
+
+<div style="text-align: center">
+<img src="http://chart.apis.google.com/chart?chs=200x875&amp;chd=t:{% articles_on_days month %}&amp;chm=N*f0*,000000,0,-1,11&amp;chds=0,{% most_articles_in_a_day month %},1,{% days_in_month month %}&amp;chxr=0,0,{% most_articles_in_a_day month %}&amp;cht=bhs&amp;chxt=x,y&amp;chxl=1:|{% days_in_month_range month %}|" alt="Article distribution for {{ month|date:"F Y" }}" title="Article distribution for {{ month|date:"F Y" }}" style="background-color: #fff; border: 1px solid #333; padding: 10px; margin: auto;" />
+</div>
+{% endcomment %}
+
+<h2>Article Archives: {{ month|date:"F Y" }} ({{ object_list|length }})</h2>
+
+{% for date in date_list %}
+{% if forloop.first %}<ul class="articles-month-archive">{% endif %}
+<li><a href="{% url articles-month-archive date.year,date|date:"b" %}" title="View all articles published in {{ date|date:"F Y" }}">{{ date|date:"F Y" }}</a></li>
+{% if forloop.last %}</ul>
+<div style="clear: both;"></div>{% endif %}
+{% endfor %}
+
+{% if object_list %}
+{% for article in object_list %}
+{% include 'articles/_article_teaser.html' %}
+{% endfor %}
+{% else %}
+<p>No articles have been posted for this month</p>
+{% endif %}
+
+<div style="text-align: center;">
+{% if previous_month %}<a href="{% url articles-month-archive previous_month.year,previous_month|date:"b" %}" title="View articles from the previous month">&lsaquo; {{ previous_month|date:"F Y" }}</a>{% endif %}
+{% if previous_month and next_month %} : {% endif %}
+{% if next_month %}<a href="{% url articles-month-archive next_month.year,next_month|date:"b" %}" title="View articles from the next month">{{ next_month|date:"F Y" }} &rsaquo;</a>{% endif %}
+</div>
+{% endblock %}

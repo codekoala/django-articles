@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load articles humanize %}
+
+{% block title %}Article List, page {{ page_obj.number }}{% endblock %}
+
+{% block content %}
+<h2>Article Archives, page {{ page_obj.number }}</h2>
+<div class="quiet">
+    Viewing article{{ page_obj.object_list|length|pluralize }} {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ paginator.count|intcomma }} total article{{ paginator.count|pluralize }}.
+</div>
+
+{% for article in object_list %}
+{% include 'articles/_article_teaser.html' %}
+{% empty %}
+<p>No articles to display.</p>
+{% endfor %}
+
+{% if is_paginated %}
+<div class="pagination">
+<ul>
+    {% if page_obj.has_previous %}<li><a href="{% url articles-archive-page page_obj.previous_page_number %}">&lsaquo; newer</a></li>{% endif %}
+    {% for p in paginator.page_range %}
+    <li>
+        {% ifequal p page_obj.number %}<span class="active">{{ p }}</span>
+        {% else %}<a href="{% url articles-archive-page p %}">{{ p }}</a>{% endifequal %}
+    </li>
+    {% endfor %}
+    {% if page_obj.has_next %}<li><a href="{% url articles-archive-page page_obj.next_page_number %}">older &rsaquo;</a></li>{% endif %}
+</ul>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Article Archive{% endblock %}
+
+{% block content %}
+<h2>Article Archives</h2>
+
+{% for date in date_list %}
+{% if forloop.first %}<ul class="articles-year-archive">{% endif %}
+<li><a href="{% url articles-year-archive date.year %}" title="View all articles published in {{ date|date:"Y" }}">{{ date|date:"Y" }}</a></li>
+{% if forloop.last %}</ul>
+<div style="clear: both;"></div>{% endif %}
+{% endfor %}
+
+{% if latest %}
+<h2>Latest Articles</h2>
+{% for article in latest %}
+{% include 'articles/_article_teaser.html' %}
+{% endfor %}
+{% endif %}
+{% endblock %}

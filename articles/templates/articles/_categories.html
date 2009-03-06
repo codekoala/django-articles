@@ -1,0 +1,6 @@
+<ul class="articles-categories">
+{% for category in categories %}
+<li><a href="{% url articles-display-category category.slug %}" title="View all articles in this category">{{ category.name }}</a> ({{ category.article_set.count }})</li>
+{% endfor %}
+<li><a href="{% url articles-display-uncategorized %}" title="View all uncategorized articles">Uncategorized</a> ({{ uncategorized }})</li>
+</ul>

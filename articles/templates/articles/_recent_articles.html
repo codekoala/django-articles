@@ -1,0 +1,11 @@
+{% if articles %}
+{% for article in articles %}
+{% include 'articles/_article_teaser.html' %}
+{% endfor %}
+
+<div class="recent-articles-archive">
+    <h5><a href="{% url articles-archive %}">Article Archive</a></h5>
+</div>
+{% else %}
+<p>No articles to show.</p>
+{% endif %}

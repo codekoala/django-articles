@@ -1,0 +1,23 @@
+{% if pages %}
+{% ifnotequal page_count 1 %}
+{% with article.publish_date as date %}
+
+{% if next %}<div class="continued-on">Continued on <a href="{% url articles-display-article-page date.year,date|date:"b",date.day,article.slug,next %}">page {{ next }}</a>...</div>{% endif %}
+
+Pages: {% if first %}<a href="{% url articles-display-article-page date.year,date|date:"b",date.day,article.slug,first %}">&laquo;</a> {% endif %}
+{% if previous %}<a href="{% url articles-display-article-page date.year,date|date:"b",date.day,article.slug,previous %}">&lsaquo;</a> {% endif %}
+
+{% for p in pages %}
+{% ifequal p page %}
+<span class="articles-current-page">{{ p }}</span>
+{% else %}
+<a href="{% url articles-display-article-page date.year,date|date:"b",date.day,article.slug,p %}">{{ p }}</a>
+{% endifequal %}
+{% endfor %}
+
+{% if next %}<a href="{% url articles-display-article-page date.year,date|date:"b",date.day,article.slug,next %}">&rsaquo;</a> {% endif %}
+{% if last %}<a href="{% url articles-display-article-page date.year,date|date:"b",date.day,article.slug,last %}">&raquo;</a> {% endif %}
+
+{% endwith %}
+{% endifnotequal %}
+{% endif %}
