@@ -1,32 +1,12 @@
-{% extends 'base.html' %}
-{% load articles humanize %}
+{% extends 'articles/base.html' %}
+{% load i18n %}
 
-{% block title %}Article List, page {{ page_obj.number }}{% endblock %}
+{% block title %}{% trans 'Articles' %}{% endblock %}
 
-{% block content %}
-<h2>Article Archives, page {{ page_obj.number }}</h2>
-<div class="quiet">
-    Viewing article{{ page_obj.object_list|length|pluralize }} {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ paginator.count|intcomma }} total article{{ paginator.count|pluralize }}.
-</div>
+{% block articles-content %}
+<h2>{% trans 'Articles' %}{% ifnotequal paginator.num_pages 1 %}, {% trans 'page' %} {{ page_obj.number }}{% endifnotequal %}</h2>
 
-{% for article in object_list %}
-{% include 'articles/_article_teaser.html' %}
-{% empty %}
-<p>No articles to display.</p>
+{% for article in page_obj.object_list %}
+{% include 'articles/_articles.html' %}
 {% endfor %}
-
-{% if is_paginated %}
-<div class="pagination">
-<ul>
-    {% if page_obj.has_previous %}<li><a href="{% url articles-archive-page page_obj.previous_page_number %}">&lsaquo; newer</a></li>{% endif %}
-    {% for p in paginator.page_range %}
-    <li>
-        {% ifequal p page_obj.number %}<span class="active">{{ p }}</span>
-        {% else %}<a href="{% url articles-archive-page p %}">{{ p }}</a>{% endifequal %}
-    </li>
-    {% endfor %}
-    {% if page_obj.has_next %}<li><a href="{% url articles-archive-page page_obj.next_page_number %}">older &rsaquo;</a></li>{% endif %}
-</ul>
-</div>
-{% endif %}
 {% endblock %}

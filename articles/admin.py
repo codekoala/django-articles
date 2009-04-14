@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
-from codekoala.articles.models import Category, Article
+from models import Category, Article
 
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'image')
@@ -14,7 +14,7 @@ class ArticleAdmin(admin.ModelAdmin):
     date_hierarchy = 'publish_date'
 
     fieldsets = (
-        (None, {'fields': ('title', 'content', 'categories')}),
+        (None, {'fields': ('title', 'content', 'markup', 'categories')}),
         ('Metadata', {
             'fields': ('keywords', 'description',),
             'classes': ('collapse',)
@@ -25,7 +25,7 @@ class ArticleAdmin(admin.ModelAdmin):
         }),
         ('Scheduling', {'fields': ('publish_date', 'expiration_date')}),
         ('Advanced', {
-            'fields': ('slug', 'is_active', 'is_commentable', 'make_pdf'),
+            'fields': ('slug', 'is_active', 'is_commentable',),
             'classes': ('collapse',)
         }),
     )

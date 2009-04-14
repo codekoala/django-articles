@@ -1,8 +1,0 @@
-{{ sender.name }} would like you to read an article entitled "{{ article.title }}" on {{ site.name }}.
-
-{% if message %}A personalized message from {{ sender.name }} follows:
-{{ message }}{% endif %}
-
-Click the following link to read the article!  http://{{ site.domain }}{{ article.get_absolute_url }}
-
-Thanks!

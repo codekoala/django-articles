@@ -1,173 +1,18 @@
-{% extends 'base.html' %}
-{% load articles markup comments humanize smiley_tags gravatar cache %}
+{% extends 'articles/base.html' %}
+{% load i18n %}
 
-{% block title %}Article: {{ object.title }}{% ifnotequal page 1 %}, page {{ page }}{% endifnotequal %}{% endblock %}
-
-{% block keywords %}{{ object.keywords }}{% endblock %}
-{% block description %}{{ object.description }}{% endblock %}
-{% block extra-head %}
-{{ block.super }}
-
-<style type="text/css">
-blockquote.quote {
-    margin: 20px;
-    padding: 5px;
-    background-color: #cfc880;
-    color: #333;
-    border: 5px solid #333;
-    -moz-border-radius: 5px;
-    -webkit-border-radius: 5px;
-}
-</style>
-<script type="text/javascript">
-$(document).ready(function () {
-    $('blockquote').addClass('quote');
-    $('blockquote:has(div.codeblock)').removeClass('quote');
-    $('blockquote:has(img)').removeClass('quote');
-});
-</script>
-{% endblock %}
+{% block title %}{% trans article.title %}{% endblock %}
 
 {% block content %}
-{% cache 300 article object %}
-<h1>{{ object.title }}{% ifnotequal page 1 %}, page {{ page }}{% endifnotequal %}</h1>
+<div id="article-content">
+    <h2>{% trans article.title %}</h2>
 
-<h6 class="article-date">Posted {{ object.publish_date|naturalday }} at {{ object.publish_date|date:"P" }} by <a href="{% url articles-by-author object.author.username %}" title="View all articles by this author">{{ object.author }}</a></h6>
-
-<div class="bookmark-links">
-    <a href="{% url send-article object.id %}" title="E-mail this article to someone"><img src="{{ MEDIA_URL }}images/mail.png" height="16" width="16" alt="E-mail this article" /></a>
-
-    <a href="http://reddit.com/submit" onclick="window.location='http://reddit.com/submit?url='+encodeURIComponent(location.href)+'&amp;title={{ object.title|urlencode }}';return false;" title="Bookmark this article on Reddit"><img src="{{ MEDIA_URL }}images/Reddit-16x16.png" height="16" width="16" alt="Reddit" /></a>
-
-    <a href="http://delicious.com/post" onclick="window.open('http://delicious.com/post?v=5&amp;noui&amp;jump=close&amp;url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title), 'delicious','toolbar=no,width=550,height=550'); return false;" title="Bookmark this on Delicious"><img src="{{ MEDIA_URL }}images/delicious-16x16.png" height="16" width="16" alt="del.icio.us" /></a>
-
-    <a href="http://digg.com/submit" onclick="window.location='http://digg.com/submit?url='+encodeURIComponent(location.href)+'&amp;title={{ object.title|urlencode }}';return false;" title="Digg this!"><img src="{{ MEDIA_URL }}images/digg-16x16.png" height="16" width="16" alt="digg" /></a>
-
-    <a href="http://www.mixx.com/submit" onclick="window.location='http://www.mixx.com/submit?page_url='+encodeURIComponent(location.href)+'&amp;title={{ object.title|urlencode }}&amp;description={{ object.description|urlencode }}';return false;" title="Add to Mixx!"><img src="http://www.mixx.com/images/buttons/mixx-button4.png" alt="Add to Mixx!" height="16" width="16" /></a>
-
-    <a href="http://www.stumbleupon.com/submit" onclick="window.location='http://www.stumbleupon.com/submit?url='+encodeURIComponent(location.href)+'&amp;title={{ object.title|urlencode }}';return false;"><img src="{{ MEDIA_URL }}images/Stumbleupon-16x16.png" alt="StumbleUpon" height="16" width="16"></a>
-
-    <a href="{{ MEDIA_URL }}articles/pdfs/{{ object.slug }}.pdf"><img src="{{ MEDIA_URL }}images/pdf-16x16.png" alt="Get the PDF version" height="16" width="16"></a>
-
-    {% if user.is_superuser %}
-    <a href="{% url admin_articles_article_change object.id %}"><img src="{{ MEDIA_URL }}images/edit.png" alt="Edit this article" height="16" width="16"></a>
-    {% endif %}
-</div>
-<div class="clear"></div>
-
-<div style="text-align: center">
-    <script type="text/javascript">
-    <!--
-    google_ad_client = "pub-7828344619183032";
-    /* 468x60, created 7/10/08 */
-    google_ad_slot = "3750736994";
-    google_ad_width = 468;
-    google_ad_height = 60;
-    //-->
-    </script>
-    <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script>
+    {{ article.rendered_content|safe }}
 </div>
 
-{% comment %}{% if object.description %}<p class="articles-description">{{ object.description|restructuredtext }}</p>{% endif %}{% endcomment %}
+<div id="article-meta">
+    <p>Posted by <a href="{% url articles_by_author article.author.username %}" title="{% trans 'Read other articles by this author' %}">{{ article.author.get_name }}</a></p>
 
-<div class="article">
-{{ object.rendered_content|smileys|safe }}
+    {{ article.links }}
 </div>
-
-<div class="categories" style="width: 100%; font-size: 0.8em">Filed in {% if object.categories.count %}{% for category in object.categories.all %}{% if not forloop.first %}{% ifnotequal object.categories.count 2 %},{% endifnotequal %} {% if forloop.last %}and{% endif %} {% endif %}<a href="{% url articles-display-category category.slug %}" title="View all articles in this category">{{ category }}</a>{% endfor %}{% else %}<a href="{% url articles-display-uncategorized %}" title="View all uncategorized articles">Uncategorized</a>{% endif %}</div>
-<div style="clear: both"></div>
-
-{% if object.followups.active.count %}
-<hr class="content" />
-
-<h4 class="hasfollowup-header">Follow-Up Articles for "{{ object.title }}"</h4>
-{% for fu in object.followups.active %}
-{% if forloop.first %}<ul class="followups">{% endif %}
-    <li>
-        <a href="{{ fu.get_absolute_url }}" title="Read this follow-up article">{{ fu.title }}</a>, posted
-        {{ fu.publish_date|naturalday }} at {{ fu.publish_date|date:"P" }}
-    </li>
-{% if forloop.last %}</ul>{% endif %}
-{% endfor %}
-{% endif %}
-
-{% if object.followup_for.active.count %}
-<hr class="content" />
-
-<h4 class="followup-header">"{{ object.title }}" follows up on th{{ object.followup_for.count|pluralize:"is,ese" }} article{{ object.followup_for.count|pluralize }}</h4>
-{% for fu in object.followup_for.active %}
-{% if forloop.first %}<ul class="followups">{% endif %}
-    <li>
-        <a href="{{ fu.get_absolute_url }}" title="Read this article">{{ fu.title }}</a>, posted
-        {{ fu.publish_date|naturalday }} at {{ fu.publish_date|date:"P" }}
-    </li>
-{% if forloop.last %}</ul>{% endif %}
-{% endfor %}
-{% endif %}
-
-{% if object.related_articles.active.count %}
-<hr class="content" />
-
-<h4 class="related-header">Articles Related to "{{ object.title }}"</h4>
-{% for ra in object.related_articles.active %}
-{% if forloop.first %}<ul class="related-articles">{% endif %}
-    <li>
-        <a href="{{ ra.get_absolute_url }}" title="Read this related article">{{ ra.title }}</a>, posted
-        {{ ra.publish_date|naturalday }} at {{ ra.publish_date|date:"P" }}
-    </li>
-{% if forloop.last %}</ul>{% endif %}
-{% endfor %}
-{% endif %}
-
-<hr class="content" />
-
-{% if object.previous_article %}<div>
-    <strong>Previous Article:</strong>
-    <a href="{{ object.previous_article.get_absolute_url }}">{{ object.previous_article.title }}</a>
-</div>{% endif %}
-{% if object.next_article %}<div>
-    <strong>Next Article:</strong>
-    <a href="{{ object.next_article.get_absolute_url }}">{{ object.next_article.title }}</a>
-</div>{% endif %}
-
-{% ifequal page object.page_count %}
-<hr class="content" />
-
-<h4 class="comments-header" id="comments">Comments</h4>
-{% get_comment_list for object as comment_list %}
-{% if comment_list|length %}
-
-{% for comment in comment_list %}
-{% if forloop.first %}<table width="100%" class="comment-list">{% endif %}
-    <tr class="{% ifequal comment.user object.author %}author{% endifequal %} {% if forloop.last %}last{% endif %}" id="c{{ comment.id }}">
-        <td class="avatar">
-            {% if comment.user %}<a href="{% url articles-by-author comment.user_name %}">{% endif %}
-            <img src="{% gravatar_for_email comment.email %}" class="gravatar" alt="Gravatar for {{ comment.user }}" /><br />
-
-            {% if comment.user %}
-            </a><a href="{% url articles-by-author comment.user_name %}">{{ comment.user_name }}</a>
-            {% else %}
-            {{ comment.name|escape }}
-            {% endif %}
-        </td>
-        <td>
-            {{ comment.comment|striptags|escape|linebreaksbr|smileys|safe|urlizetrunc:40 }}
-            <div class="posted-by quiet">
-                Posted on
-                {{ comment.submit_date|date:"j N Y \a\t P" }}
-            </div>
-        </td>
-    </tr>
-{% if forloop.last %}</table>{% endif %}
-{% endfor %}
-{% else %}
-<p>No comments have been posted for this article.</p>
-{% endif %}
-
-<hr class="content" />
-
-<h4 class="postcomment-header">Post a Comment</h4>
-{% render_comment_form for object %}
-{% endifequal %}
-{% endcache %}
 {% endblock %}

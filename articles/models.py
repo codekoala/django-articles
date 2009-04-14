@@ -4,17 +4,41 @@ from django.contrib.auth.models import User
 from django.contrib.comments.models import Comment
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sitemaps import ping_google
-from django.contrib.markup.templatetags.markup import restructuredtext
+from django.contrib.markup.templatetags import markup
 from django.core.urlresolvers import reverse
+from django.core.cache import cache
 from django.conf import settings
+from django.utils.translation import ugettext_lazy as _
 from datetime import datetime
-import commands
+from base64 import encodestring
 import os
 import re
-import xmlrpclib
+import urllib
 import unicodedata
 
 WORD_LIMIT = getattr(settings, 'ARTICLES_TEASER_LIMIT', 75)
+MARKUP_OPTIONS = getattr(settings, 'ARTICLE_MARKUP_OPTIONS', (
+        ('h', _('HTML/Plain Text')),
+        ('m', _('Markdown')),
+        ('r', _('ReStructured Text')),
+        ('t', _('Textile'))
+    ))
+MARKUP_DEFAULT = getattr(settings, 'ARTICLE_MARKUP_DEFAULT', 'h')
+
+# regex used to find links in an article
+LINK_RE = re.compile('<a.*?href="(.*?)".*?>(.*?)</a>', re.I|re.M)
+TITLE_RE = re.compile('<title>(.*?)</title>', re.I|re.M)
+
+def get_name(user):
+    """
+    Provides a way to fall back to a user's username if their full name has not
+    been entered.
+    """
+    if len(user.get_full_name().strip()):
+        return user.get_full_name()
+    else:
+        return user.username
+User.get_name = get_name
 
 class CategoryManager(models.Manager):
     def active(self):
@@ -22,7 +46,7 @@ class CategoryManager(models.Manager):
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
-    slug = models.SlugField()
+    slug = models.SlugField(unique=True)
     image = models.ImageField(upload_to='categories/', blank=True, null=True)
     is_active = models.BooleanField(default=True, blank=True)
 
@@ -60,121 +84,55 @@ class ArticleManager(models.Manager):
 
 class Article(models.Model):
     title = models.CharField(max_length=100)
-    slug = models.SlugField(unique_for_date='publish_date')
-    keywords = models.TextField(blank=True)
-    description = models.TextField(blank=True, help_text="If omitted, the description will be determined by the first bit of the article's content.")
+    slug = models.SlugField(unique_for_year='publish_date')
     author = models.ForeignKey(User)
+
+    keywords = models.TextField(blank=True)
+    description = models.TextField(blank=True, help_text=_("If omitted, the description will be determined by the first bit of the article's content."))
+
+    markup = models.CharField(max_length=1, choices=MARKUP_OPTIONS, default=MARKUP_DEFAULT, help_text=_('Select the type of markup you are using in this article.'))
     content = models.TextField()
     rendered_content = models.TextField()
-    categories = models.ManyToManyField(Category, help_text='Select any categories to classify this article.', blank=True)
-    followup_for = models.ManyToManyField('self', symmetrical=False, blank=True, help_text='Select any other articles that this article follows up on.', related_name='followups')
+
+    categories = models.ManyToManyField(Category, help_text=_('Select any categories to classify the content of this article.'), blank=True)
+    followup_for = models.ManyToManyField('self', symmetrical=False, blank=True, help_text=_('Select any other articles that this article follows up on.'), related_name='followups')
     related_articles = models.ManyToManyField('self', blank=True)
+
+    publish_date = models.DateTimeField(default=datetime.now, help_text=_('The date and time this article shall appear online.'))
+    expiration_date = models.DateTimeField(blank=True, null=True, help_text=_('Leave blank if the article does not expire.'))
+
     is_active = models.BooleanField(default=True, blank=True)
     is_commentable = models.BooleanField(default=True, blank=True)
-    make_pdf = models.BooleanField(default=True, blank=True)
-    publish_date = models.DateTimeField(default=datetime.now)
-    expiration_date = models.DateTimeField(blank=True, null=True)
+    login_required = models.BooleanField(blank=True, help_text=_('Enable this if users must login before they can read this article.'))
 
     objects = ArticleManager()
 
     def __init__(self, *args, **kwargs):
+        """
+        Make sure that we have some rendered content to use.
+        """
         super(Article, self).__init__(*args, **kwargs)
 
         if self.id:
-            if not self.rendered_content or not len(self.rendered_content):
+            if not self.rendered_content or not len(self.rendered_content.strip()):
                 self.save()
 
     def __unicode__(self):
         return self.title
 
     def save(self):
-        # make sure each article has a heading
-        if not self.content.startswith('==='):
-            line = '=' * len(self.title)
-            self.content = """%s
-%s
-%s
-
-:author: Josh VanderLinden <codekoala@gmail.com>
-:date: %s
-:Homepage: http://www.codekoala.com/
-
-%s
-""" % (line, self.title, line,
-       self.publish_date.strftime('%d %b %Y'), self.content)
-
-        # no more page breaks please
-        self.content = self.content.replace(PAGE_BREAK, '')
-
-        # let's use "code-block" instead of "sourcecode" for the PDFs
-        self.content = self.content.replace('.. sourcecode:: ',
-                                            '.. code-block:: ')
-
-        self.rendered_content = restructuredtext(self.content)
-        super(Article, self).save()
-
-        # don't save any .rst or .pdf files if we're in debug mode or it's
-        # specifically checked
-        #if settings.DEBUG or not self.make_pdf: return
-
-        # create a PDF version of the article
-        out_dir = os.path.join(settings.MEDIA_ROOT, 'articles')
-        rst_dir = os.path.join(out_dir, 'rst')
-        pdf_dir = os.path.join(out_dir, 'pdfs')
-
-        # ensure that the RST directory exists
-        try: os.makedirs(rst_dir)
-        except OSError: pass
-
-        # ensure that the PDF directory exists
-        try: os.makedirs(pdf_dir)
-        except OSError: pass
-
-        # save the RST
-        pdf_file = os.path.join(pdf_dir, self.slug + '.pdf')
-        rst_file = os.path.join(rst_dir, self.slug + '.rst')
-
-        real_content = clean_content = u_clean(self.content)
-
-        # now clean it up a bit more for the PDF
-        #clean_content = clean_content.replace('    :linenos:\r\n', '    :linenos: true\r\n')
-        clean_content = re.sub('(:(H|h)omepage:.*\n)',
-                                r'\1:URL: http://www.codekoala.com%s\n\n .. header::\n\n    Copyright (c) %i Josh VanderLinden\n\n .. footer::\n\n    page ###Page###\n' % (self.get_absolute_url(), self.publish_date.year), clean_content)
-        clean_content = re.sub('( .. image:: http://www.codekoala.com/static/)',
-                              r' .. image:: %s/' % settings.MEDIA_ROOT,
-                              clean_content)
-
-        # see if we have any comments on this article
-        content_type = ContentType.objects.get_for_model(Article)
-        comments = Comment.objects.filter(content_type=content_type, object_pk=str(self.id))
-        if comments.count():
-            # we do, so tack on the comments for the PDF
-            clean_content += '\n\nComments\n========\n\n'
-            for comment in comments:
-                clean_content += """%s said...\n%s
-
-%s
-
-Posted: %s
-
-""" % (u_clean(comment.name),
-        '-' * len(comment.name + ' said...'),
-        u_clean(comment.comment),
-        comment.submit_date)
-
-        #print clean_content
-        self.__save_pdf(rst_file, pdf_file, clean_content)
-
-        # try to access the PDF file.  If it's there, we can assume that all
-        # went well.  If it's not there, try removing the :linenos: option
-        if not os.access(pdf_file, os.R_OK):
-            clean_content = clean_content.replace('    :linenos:\r\n', '')
-            self.__save_pdf(rst_file, pdf_file, clean_content)
-
-        # now save the "real" RST
-        rst = open(rst_file, 'w')
-        rst.write(real_content)
-        rst.close()
+        """
+        Renders the article using the appropriate markup language.  Pings
+        Google to let it know that this article has been updated.
+        """
+        if self.markup == 'm':
+            self.rendered_content = markup.markdown(self.content)
+        elif self.markup == 'r':
+            self.rendered_content = markup.restructuredtext(self.content)
+        elif self.markup == 't':
+            self.rendered_content = markup.textile(self.content)
+        else:
+            self.rendered_content = self.content
 
         if not settings.DEBUG:
             # try to tell google that we have a new article
@@ -183,22 +141,28 @@ Posted: %s
             except Exception:
                 pass
 
-    def __save_pdf(self, rst_file, pdf_file, content):
-        """
-        Attempts to save a PDF version of the article.
-        """
+    def _get_article_links(self):
+        links = {}
 
-        # save the PDF-appropriate RST
-        rst = open(rst_file, 'w')
-        rst.write(u_clean(content))
-        rst.close()
+        for link in LINK_RE.finditer(self.rendered_content):
+            key = 'href_title_' + encodestring(link.group(1)).strip()
+            if not cache.get(key):
+                c = urllib.urlopen(link.group(1))
+                html = c.read()
+                c.close()
+                title = TITLE_RE.search(html)
+                if title: title = title.group(1)
+                else: title = link.group(2)
 
-        # generate the PDF
-        commands.getoutput('rst2pdf %s -o %s' % (rst_file, pdf_file))
+                cache.set(key, title, 86400)
+
+            links[link.group(1)] = cache.get(key)
+
+        return links
+    links = property(_get_article_links)
 
     def get_absolute_url(self):
-        info = self.publish_date.strftime('%Y/%b/%d').lower().split('/') + [self.slug]
-        return reverse('articles_display_article', args=info)
+        return reverse('articles_display_article', args=[self.publish_date.year, self.slug])
 
     def _get_teaser(self):
         if len(self.description.strip()):
@@ -212,57 +176,5 @@ Posted: %s
         return text
     teaser = property(_get_teaser)
 
-    def next_article(self):
-        try:
-            article = Article.objects.active().exclude(id__exact=self.id).filter(publish_date__gte=self.publish_date).order_by('publish_date')[0]
-        except (Article.DoesNotExist, IndexError):
-            article = None
-        return article
-
-    def previous_article(self):
-        try:
-            article = Article.objects.active().exclude(id__exact=self.id).filter(publish_date__lte=self.publish_date).order_by('-publish_date')[0]
-        except (Article.DoesNotExist, IndexError):
-            article = None
-        return article
-
     class Meta:
         ordering = ('-publish_date', 'title')
-
-# wrap the save comment method so the PDF will be regenerated as soon as a new
-# comment is posted
-def update_pdf(func):
-    def new(obj, *args, **kwargs):
-        result = func(obj, *args, **kwargs)
-
-        # only save the object whose comment was just saved if it's an Article
-        if isinstance(obj.content_object, Article):
-            obj.content_object.save()
-
-        return result
-    return new
-
-Comment.save = update_pdf(Comment.save)
-
-def u_clean(s):
-    """
-    Cleans up dirty unicode text.
-    """
-    uni = ''
-    try:
-        # try this first
-        uni = str(s).decode('iso-8859-1')
-    except:
-        try:
-            # try utf-8 next
-            uni = str(s).decode('utf-8')
-        except:
-            # last resort method... one character at a time
-            if s and type(s) in (str, unicode):
-                for c in s:
-                    try:
-                        uni += unicodedata.normalize('NFKC', unicode(c))
-                    except:
-                        uni += '-'
-
-    return uni.encode('ascii', 'xmlcharrefreplace')

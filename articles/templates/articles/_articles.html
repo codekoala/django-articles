@@ -1,0 +1,7 @@
+{% load i18n %}
+{% if forloop.first %}<ol class="article-list">{% endif %}
+    <li>
+        <h3><a href="{{ article.get_absolute_url }}" title="{% trans 'Read this article' %}">{{ article.title }}</a><h3>
+        <div class="quiet">{% trans 'Posted on' %} {{ article.publish_date|date:"F jS, Y" }}</div>
+    </li>
+{% if forloop.last %}</ol>{% endif %}
