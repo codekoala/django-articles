@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
+from django.utils.translation import ugettext_lazy as _
 from models import Category, Article
 
 class CategoryAdmin(admin.ModelAdmin):
@@ -7,7 +8,7 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
 
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'publish_date', 'expiration_date', 'is_active')
+    list_display = ('title', 'author', 'publish_date', 'expiration_date', 'is_active', 'is_commentable')
     list_filter = ('author', 'is_active', 'publish_date', 'expiration_date')
     list_per_page = 25
     search_fields = ('title', 'keywords', 'description', 'content')
@@ -36,6 +37,24 @@ class ArticleAdmin(admin.ModelAdmin):
 
     filter_horizontal = ('categories', 'followup_for', 'related_articles')
     prepopulated_fields = {'slug': ('title',)}
+
+    def mark_active(self, request, queryset):
+        queryset.update(is_active=True)
+    mark_active.short_description = _('Mark select articles as active')
+
+    def mark_inactive(self, request, queryset):
+        queryset.update(is_active=False)
+    mark_inactive.short_description = _('Mark select articles as inactive')
+
+    def mark_commentable(self, request, queryset):
+        queryset.update(is_commentable=True)
+    mark_commentable.short_description = _('Mark select articles as commentable')
+
+    def mark_noncommentable(self, request, queryset):
+        queryset.update(is_commentable=False)
+    mark_noncommentable.short_description = _('Mark select articles as noncommentable')
+
+    actions = (mark_active, mark_inactive, mark_commentable, mark_noncommentable)
 
     def save_model(self, request, obj, form, change):
         try:

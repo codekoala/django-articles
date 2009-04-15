@@ -123,6 +123,11 @@ class Article(models.Model):
         super(Article, self).__init__(*args, **kwargs)
 
         if self.id:
+            # mark the article as inactive if it's expired and still active
+            if self.expiration_date and self.expiration_date <= datetime.now() and self.is_active:
+                self.is_active = False
+                self.save()
+
             if not self.rendered_content or not len(self.rendered_content.strip()):
                 self.save()
 
