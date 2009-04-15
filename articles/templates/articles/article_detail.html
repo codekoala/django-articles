@@ -1,18 +1,118 @@
 {% extends 'articles/base.html' %}
-{% load i18n %}
+{% load i18n humanize comments gravatar %}
 
 {% block title %}{% trans article.title %}{% endblock %}
 
 {% block content %}
 <div id="article-content">
-    <h2>{% trans article.title %}</h2>
+    <h2 class="title">{% trans article.title %}</h2>
 
     {{ article.rendered_content|safe }}
 </div>
 
 <div id="article-meta">
-    <p>Posted by <a href="{% url articles_by_author article.author.username %}" title="{% trans 'Read other articles by this author' %}">{{ article.author.get_name }}</a></p>
+    <h4>Meta</h4>
 
-    {{ article.links }}
+    <p><strong>{% trans 'Published' %}</strong>: {{ article.publish_date|naturalday }}</a>
+
+    <p><strong>{% trans 'Author' %}</strong>: <a href="{% url articles_by_author article.author.username %}" title="{% trans 'Read other articles by this author' %}">{{ article.author.get_name }}</a></p>
+
+    {% if article.is_commentable %}
+    {% get_comment_count for article as comment_count %}
+    <p><strong>{% trans 'Comments' %}</strong>: <a href="#comments">{{ comment_count }}</a></a>
+    {% endif %}
+
+    <p><strong>{% trans 'Word Count' %}</strong>: {{ article.word_count|intcomma }}</a>
+
+    {% if article.use_addthis_button and article.addthis_username %}
+    <!-- AddThis Button BEGIN -->
+    <div>
+        <script type="text/javascript">var addthis_pub="{{ article.addthis_username }}";</script>
+        <a href="http://www.addthis.com/bookmark.php?v=20" onmouseover="return addthis_open(this, '', '[URL]', '[TITLE]')" onmouseout="addthis_close()" onclick="return addthis_sendto()"><img src="http://s7.addthis.com/static/btn/lg-share-en.gif" width="125" height="16" alt="Bookmark and Share" style="border:0"/></a>
+        <script type="text/javascript" src="http://s7.addthis.com/js/200/addthis_widget.js"></script>
+    </div>
+    <!-- AddThis Button END -->
+    {% endif %}
+
+    <h4>{% trans 'Filed Under' %}</h4>
+    <p>{% if article.categories.count %}{% for category in article.categories.all %}{% if not forloop.first %}{% ifnotequal article.categories.count 2 %},{% endifnotequal %} {% if forloop.last %}{% trans 'and' %}{% endif %} {% endif %}<a href="{% url articles_display_category category.slug %}" title="{% trans 'View all articles in this category' %}">{{ category }}</a>{% endfor %}{% else %}<a href="{% url articles_display_category 'uncategorized' %}" title="{% trans 'View all uncategorized articles' %}">{% trans 'Uncategorized' %}</a>{% endif %}</p>
+
+    {% if article.followups.active.count %}
+    <h4 class="hasfollowup-header">{% trans 'Follow-Up Articles' %}</h4>
+    {% for fu in article.followups.active %}
+    {% if forloop.first %}<ul class="followups">{% endif %}
+        <li>
+            <a href="{{ fu.get_absolute_url }}" title="{% trans 'Read this follow-up article' %}">{{ fu.title }}</a>, {% trans 'posted' %} {{ fu.publish_date|naturalday }}
+        </li>
+    {% if forloop.last %}</ul>{% endif %}
+    {% endfor %}
+    {% endif %}
+
+    {% if article.followup_for.active.count %}
+    <h4 class="followup-header">Follows Up On</h4>
+    {% for fu in article.followup_for.active %}
+    {% if forloop.first %}<ul class="followups">{% endif %}
+        <li>
+            <a href="{{ fu.get_absolute_url }}" title="{% trans 'Read this article' %}">{{ fu.title }}</a>, {% trans 'posted' %} {{ fu.publish_date|naturalday }}
+        </li>
+    {% if forloop.last %}</ul>{% endif %}
+    {% endfor %}
+    {% endif %}
+
+    {% if articles.related_articles.active.count %}
+    <h4 class="related-header">Related Articles</h4>
+    {% for ra in articles.related_articles.active %}
+    {% if forloop.first %}<ul class="related-articles">{% endif %}
+        <li>
+            <a href="{{ ra.get_absolute_url }}" title="{% trans 'Read this related article' %}">{{ ra.title }}</a>, {% trans 'posted' %}  {{ ra.publish_date|naturalday }}
+        </li>
+    {% if forloop.last %}</ul>{% endif %}
+    {% endfor %}
+    {% endif %}
+
+    {% for url,title in article.links %}
+    {% if forloop.first %}<h4>{% trans 'Article Links' %}</h4>
+    <ol>{% endif %}
+        <li><a href="{{ url }}" title="{{ title }}">{{ title|safe|truncatewords:10 }}</a></li>
+    {% if forloop.last %}</ol>{% endif %}
+    {% endfor %}
 </div>
+<div class="clear"></div>
+
+{% if article.display_comments %}
+{% get_comment_list for article as comment_list %}
+{% if comment_list|length %}
+<div id="article-comments">
+    <h4 class="comments-header" id="comments">Comments</h4>
+
+    {% for comment in comment_list %}
+    {% if forloop.first %}<table class="comment-list">{% endif %}
+        <tr class="{% ifequal comment.user article.author %}author-comment{% endifequal %} {% if forloop.first %}first{% endif %} {% if forloop.last %}last{% endif %}" id="c{{ comment.id }}">
+            <td class="avatar">
+                {% if comment.user %}<a href="{% url articles_by_author comment.user_name %}">{% endif %}
+                <img src="{% gravatar_for_email comment.email %}" class="gravatar" alt="Gravatar for {{ comment.user }}" /><br />
+                {% if comment.user %}
+                </a><a href="{% url articles_by_author comment.user_name %}">{{ comment.user_name }}</a>
+                {% else %}
+                {{ comment.name|escape }}
+                {% endif %}
+            </td>
+            <td>
+                {{ comment.comment|striptags|escape|linebreaksbr|safe|urlizetrunc:40 }}
+                <div class="posted-by quiet">
+                    {{ comment.submit_date|date:"j N Y \a\t P" }}
+                </div>
+            </td>
+        </tr>
+    {% if forloop.last %}</table>{% endif %}
+    {% endfor %}
+</div>
+{% endif %}{% endif %}
+
+{% if article.is_commentable %}
+<div id="article-comments-form">
+    <h4 class="postcomment-header">Post a Comment</h4>
+    {% render_comment_form for article %}
+</div>
+{% endif %}
 {% endblock %}

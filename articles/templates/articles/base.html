@@ -21,4 +21,24 @@
 </div>
 
 {% block articles-content %}{% endblock %}
+
+{% if paginator and page_obj %}
+{% ifnotequal paginator.page_range|length 1 %}
+{% for p in paginator.page_range %}
+{% if forloop.first %}<ul class="pagination-pages">
+{% if page_obj.has_previous %}
+    <li><a href="{% get_page_url 1 %}">&laquo;</a></li>
+    <li><a href="{% get_page_url page_obj.previous_page_number %}">&lsaquo;</a></li>
+{% endif %}
+{% endif %}
+    <li><a href="{% get_page_url p %}"{% ifequal p page_obj.number %} class="current-page"{% endifequal %}>{{ p }}</a></li>
+{% if forloop.last %}
+{% if page_obj.has_next %}
+    <li><a href="{% get_page_url page_obj.next_page_number %}">&rsaquo;</a></li>
+    <li><a href="{% get_page_url paginator.num_pages %}">&raquo;</a></li>
+{% endif %}
+</ul>{% endif %}
+{% endfor %}
+{% endifnotequal %}
+{% endif %}
 {% endblock %}

@@ -8,6 +8,7 @@ from django.contrib.markup.templatetags import markup
 from django.core.urlresolvers import reverse
 from django.core.cache import cache
 from django.conf import settings
+from django.template.defaultfilters import striptags
 from django.utils.translation import ugettext_lazy as _
 from datetime import datetime
 from base64 import encodestring
@@ -24,6 +25,9 @@ MARKUP_OPTIONS = getattr(settings, 'ARTICLE_MARKUP_OPTIONS', (
         ('t', _('Textile'))
     ))
 MARKUP_DEFAULT = getattr(settings, 'ARTICLE_MARKUP_DEFAULT', 'h')
+USE_ADDTHIS_BUTTON = getattr(settings, 'USE_ADDTHIS_BUTTON', True)
+ADDTHIS_USE_AUTHOR = getattr(settings, 'ADDTHIS_USE_AUTHOR', True)
+DEFAULT_ADDTHIS_USER = getattr(settings, 'DEFAULT_ADDTHIS_USER', None)
 
 # regex used to find links in an article
 LINK_RE = re.compile('<a.*?href="(.*?)".*?>(.*?)</a>', re.I|re.M)
@@ -103,7 +107,12 @@ class Article(models.Model):
 
     is_active = models.BooleanField(default=True, blank=True)
     is_commentable = models.BooleanField(default=True, blank=True)
+    display_comments = models.BooleanField(default=True, blank=True)
     login_required = models.BooleanField(blank=True, help_text=_('Enable this if users must login before they can read this article.'))
+
+    use_addthis_button = models.BooleanField(_('Show AddThis button'), blank=True, default=USE_ADDTHIS_BUTTON, help_text=_('Check this to show an AddThis bookmark button when viewing an article.'))
+    addthis_use_author = models.BooleanField(_("Use article author's username"), blank=True, default=ADDTHIS_USE_AUTHOR, help_text=_("Check this if you want to use the article author's username for the AddThis button.  Respected only if the username field is left empty."))
+    addthis_username = models.CharField(_('AddThis Username'), max_length=50, blank=True, default=DEFAULT_ADDTHIS_USER, help_text=_('The AddThis username to use for the button.'))
 
     objects = ArticleManager()
 
@@ -120,7 +129,7 @@ class Article(models.Model):
     def __unicode__(self):
         return self.title
 
-    def save(self):
+    def save(self, *args):
         """
         Renders the article using the appropriate markup language.  Pings
         Google to let it know that this article has been updated.
@@ -134,6 +143,11 @@ class Article(models.Model):
         else:
             self.rendered_content = self.content
 
+        # if the author wishes to have an "AddThis" button on this article,
+        # make sure we have a username to go along with it.
+        if self.use_addthis_button and self.addthis_use_author and not self.addthis_username:
+            self.addthis_username = self.author.username
+
         if not settings.DEBUG:
             # try to tell google that we have a new article
             try:
@@ -141,30 +155,76 @@ class Article(models.Model):
             except Exception:
                 pass
 
+        super(Article, self).save(*args)
+
     def _get_article_links(self):
+        """
+        Find all links in this article.  When a link is encountered in the
+        article text, this will attempt to discover the title of the page it
+        links to.  If there is a problem with the target page, or there is no
+        title (ie it's an image or other binary file), the text of the link is
+        used as the title.  Once a title is determined, it is cached for a week
+        before it will be requested again.
+        """
         links = {}
+        keys = []
 
+        # find all links in the article
         for link in LINK_RE.finditer(self.rendered_content):
-            key = 'href_title_' + encodestring(link.group(1)).strip()
+            url = link.group(1)
+            key = 'href_title_' + encodestring(url).strip()
+
+            # look in the cache for the link target's title
             if not cache.get(key):
-                c = urllib.urlopen(link.group(1))
-                html = c.read()
-                c.close()
-                title = TITLE_RE.search(html)
-                if title: title = title.group(1)
-                else: title = link.group(2)
+                try:
+                    # open the URL
+                    c = urllib.urlopen(url)
+                    html = c.read()
+                    c.close()
 
-                cache.set(key, title, 86400)
+                    # try to determine the title of the target
+                    title = TITLE_RE.search(html)
+                    if title: title = title.group(1)
+                    else: title = link.group(2)
+                except:
+                    # if anything goes wrong (ie IOError), use the link's text
+                    title = link.group(2)
 
-            links[link.group(1)] = cache.get(key)
+                # cache the page title for a week
+                cache.set(key, title, 604800)
 
-        return links
+            # get the link target's title from cache
+            val = cache.get(key)
+            if val:
+                # add it to the list of links and titles
+                links[url] = val
+
+                # don't duplicate links to the same page
+                if url not in keys: keys.append(url)
+
+        # now go thru and sort the links according to where they appear in the
+        # article
+        sorted = []
+        for key in keys:
+            sorted.append((key, links[key]))
+
+        return tuple(sorted)
     links = property(_get_article_links)
+
+    def _get_word_count(self):
+        """
+        Stupid word counter for an article.
+        """
+        return len(striptags(self.rendered_content).split(' '))
+    word_count = property(_get_word_count)
 
     def get_absolute_url(self):
         return reverse('articles_display_article', args=[self.publish_date.year, self.slug])
 
     def _get_teaser(self):
+        """
+        Retrieve some part of the article or the article's description.
+        """
         if len(self.description.strip()):
             text = self.description
         else:

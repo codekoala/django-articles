@@ -1,0 +1,12 @@
+{% extends 'articles/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Uncategorized Articles' %}{% endblock %}
+
+{% block articles-content %}
+<h2>{% trans 'Uncategorized Articles' %}{% ifnotequal paginator.num_pages 1 %}, {% trans 'page' %} {{ page_obj.number }}{% endifnotequal %}</h2>
+
+{% for article in page_obj.object_list %}
+{% include 'articles/_articles.html' %}
+{% endfor %}
+{% endblock %}

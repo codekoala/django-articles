@@ -24,8 +24,12 @@ class ArticleAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         ('Scheduling', {'fields': ('publish_date', 'expiration_date')}),
+        ('AddThis Button Options', {
+            'fields': ('use_addthis_button', 'addthis_use_author', 'addthis_username'),
+            'classes': ('collapse',)
+        }),
         ('Advanced', {
-            'fields': ('slug', 'is_active', 'is_commentable',),
+            'fields': ('slug', 'is_active', 'is_commentable', 'display_comments', 'login_required'),
             'classes': ('collapse',)
         }),
     )

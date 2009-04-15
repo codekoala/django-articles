@@ -12,11 +12,11 @@ urlpatterns += patterns('',
     url(r'^$', views.display_blog_page, name='articles_archive'),
     url(r'^page/(?P<page>\d+)/$', views.display_blog_page, name='articles_archive_page'),
 
-    url(r'^uncategorized/$', views.display_blog_page, name='articles_uncategorized'),
-    url(r'^uncategorized/page/(?P<page>\d+)/$', views.display_blog_page, name='articles_uncategorized_page'),
-
     url(r'^category/(?P<category>.*)/page/(?P<page>\d+)/$', views.display_blog_page, name='articles_display_category_page'),
     url(r'^category/(?P<category>.*)/$', views.display_blog_page, name='articles_display_category'),
+
+    (r'^category/(?P<category>uncategorized)/$', views.display_blog_page),
+    (r'^category/(?P<category>uncategorized)/page/(?P<page>\d+)/$', views.display_blog_page),
 
     url(r'^author/(?P<username>.*)/page/(?P<page>\d+)/$', views.display_blog_page, name='articles_by_author_page'),
     url(r'^author/(?P<username>.*)/$', views.display_blog_page, name='articles_by_author'),
