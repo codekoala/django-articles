@@ -241,5 +241,21 @@ class Article(models.Model):
         return text
     teaser = property(_get_teaser)
 
+    def get_next_article(self):
+        try:
+            qs = Article.objects.active().exclude(id__exact=self.id)
+            article = qs.filter(publish_date__gte=self.publish_date).order_by('publish_date')[0]
+        except (Article.DoesNotExist, IndexError):
+            article = None
+        return article
+
+    def get_previous_article(self):
+        try:
+            qs = Article.objects.active().exclude(id__exact=self.id)
+            article = qs.filter(publish_date__lte=self.publish_date).order_by('-publish_date')[0]
+        except (Article.DoesNotExist, IndexError):
+            article = None
+        return article
+
     class Meta:
         ordering = ('-publish_date', 'title')
