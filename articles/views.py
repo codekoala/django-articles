@@ -70,7 +70,7 @@ def display_article(request, year, slug, template='articles/article_detail.html'
 
     # make sure the user is logged in if the article requires it
     if article.login_required and not request.user.is_authenticated():
-        return HttpResponseRedirect('/accounts/login/?next=' + request.path)
+        return HttpResponseRedirect(reverse('auth_login') + '?next=' + request.path)
 
     return render_to_response(template,
                               {'article': article},
