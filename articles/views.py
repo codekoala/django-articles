@@ -25,13 +25,13 @@ def display_blog_page(request, category=None, username=None, year=None, month=No
             template = 'articles/uncategorized_article_list.html'
         else:
             category = get_object_or_404(Category, slug=category)
-            articles = category.article_set.all()
+            articles = category.article_set.active()
             template = 'articles/display_category.html'
             context['category'] = category
     elif username:
         # listing articles by a particular author
         user = get_object_or_404(User, username=username)
-        articles = user.article_set.all()
+        articles = user.article_set.active()
         template = 'articles/by_author.html'
         context['author'] = user
     elif year and month:
