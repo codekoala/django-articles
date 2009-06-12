@@ -16,7 +16,7 @@ def notify_of_comment(sender, instance, created, **kwargs):
 
         mail_admins('New Comment', message)
 
-#post_save.connect(notify_of_comment, sender=Comment)
+post_save.connect(notify_of_comment, sender=Comment)
 
 """
 The Pygments reStructuredText directive

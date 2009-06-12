@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage
 from django.core.urlresolvers import reverse
-from django.http import HttpResponsePermanentRedirect, Http404
+from django.http import HttpResponsePermanentRedirect, Http404, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from articles.models import Article, Category
@@ -49,7 +49,10 @@ def display_blog_page(request, category=None, username=None, year=None, month=No
     # paginate the articles
     paginator = Paginator(articles, ARTICLE_PAGINATION,
                           orphans=int(ARTICLE_PAGINATION / 4))
-    page = paginator.page(page)
+    try:
+        page = paginator.page(page)
+    except EmptyPage:
+        raise Http404
 
     context.update({'paginator': paginator,
                     'page_obj': page})

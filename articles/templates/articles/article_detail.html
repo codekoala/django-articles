@@ -13,16 +13,16 @@
 <div id="article-meta">
     <h4>Meta</h4>
 
-    <p><strong>{% trans 'Published' %}</strong>: {{ article.publish_date|naturalday }}</a>
+    <p><strong>{% trans 'Published' %}</strong>: {{ article.publish_date|naturalday }}</p>
 
     <p><strong>{% trans 'Author' %}</strong>: <a href="{% url articles_by_author article.author.username %}" title="{% trans 'Read other articles by this author' %}">{{ article.author.get_name }}</a></p>
 
     {% if article.is_commentable %}
     {% get_comment_count for article as comment_count %}
-    <p><strong>{% trans 'Comments' %}</strong>: <a href="#comments">{{ comment_count }}</a></a>
+    <p><strong>{% trans 'Comments' %}</strong>: <a href="#comments">{{ comment_count }}</a></p>
     {% endif %}
 
-    <p><strong>{% trans 'Word Count' %}</strong>: {{ article.word_count|intcomma }}</a></p>
+    <p><strong>{% trans 'Word Count' %}</strong>: {{ article.word_count|intcomma }}</p>
 
     {% if article.get_next_article %}
     <p>
@@ -103,7 +103,7 @@
                 {% if comment.user %}<a href="{% url articles_by_author comment.user_name %}">{% endif %}
                 <img src="{% gravatar_for_email comment.email %}" class="gravatar" alt="Gravatar for {{ comment.user }}" /><br />
                 {% if comment.user %}
-                </a><a href="{% url articles_by_author comment.user_name %}">{{ comment.user_name }}</a>
+                </a><a href="{% url articles_by_author comment.user %}">{{ comment.user_name }}</a>
                 {% else %}
                 {{ comment.name|escape }}
                 {% endif %}
