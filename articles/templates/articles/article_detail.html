@@ -100,7 +100,7 @@
     {% if forloop.first %}<table class="comment-list">{% endif %}
         <tr class="{% ifequal comment.user article.author %}author-comment{% endifequal %} {% if forloop.first %}first{% endif %} {% if forloop.last %}last{% endif %}" id="c{{ comment.id }}">
             <td class="avatar">
-                {% if comment.user %}<a href="{% url articles_by_author comment.user_name %}">{% endif %}
+                {% if comment.user %}<a href="{% url articles_by_author comment.user %}">{% endif %}
                 <img src="{% gravatar_for_email comment.email %}" class="gravatar" alt="Gravatar for {{ comment.user }}" /><br />
                 {% if comment.user %}
                 </a><a href="{% url articles_by_author comment.user %}">{{ comment.user_name }}</a>
