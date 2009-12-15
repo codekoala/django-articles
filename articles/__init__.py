@@ -1,5 +1,5 @@
 from django.db.models.signals import post_save
-from django.core.mail import mail_admins
+from django.core.mail import send_mail
 from django.contrib.comments.models import Comment
 from django.conf import settings
 
@@ -14,7 +14,7 @@ def notify_of_comment(sender, instance, created, **kwargs):
             message = 'A comment has been updated.\n'
         message += instance.get_as_text()
 
-        mail_admins('New Comment', message)
+        send_mail('New Comment', message, instance.user_email, [a[1] for a in settings.ADMINS])
 
 post_save.connect(notify_of_comment, sender=Comment)
 
