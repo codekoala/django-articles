@@ -1,30 +1,31 @@
-from django.db import models, connection
+from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
-from django.contrib.comments.models import Comment
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.sitemaps import ping_google
 from django.contrib.markup.templatetags import markup
-from django.core.urlresolvers import reverse
+from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.conf import settings
 from django.template.defaultfilters import striptags
 from django.utils.translation import ugettext_lazy as _
 from datetime import datetime
 from base64 import encodestring
-import os
 import re
 import urllib
-import unicodedata
 
 WORD_LIMIT = getattr(settings, 'ARTICLES_TEASER_LIMIT', 75)
+
+MARKUP_HTML = 'h'
+MARKUP_MARKDOWN = 'm'
+MARKUP_REST = 'r'
+MARKUP_TEXTILE = 't'
 MARKUP_OPTIONS = getattr(settings, 'ARTICLE_MARKUP_OPTIONS', (
-        ('h', _('HTML/Plain Text')),
-        ('m', _('Markdown')),
-        ('r', _('ReStructured Text')),
-        ('t', _('Textile'))
+        (MARKUP_HTML, _('HTML/Plain Text')),
+        (MARKUP_MARKDOWN, _('Markdown')),
+        (MARKUP_REST, _('ReStructured Text')),
+        (MARKUP_TEXTILE, _('Textile'))
     ))
-MARKUP_DEFAULT = getattr(settings, 'ARTICLE_MARKUP_DEFAULT', 'h')
+MARKUP_DEFAULT = getattr(settings, 'ARTICLE_MARKUP_DEFAULT', MARKUP_HTML)
+
 USE_ADDTHIS_BUTTON = getattr(settings, 'USE_ADDTHIS_BUTTON', True)
 ADDTHIS_USE_AUTHOR = getattr(settings, 'ADDTHIS_USE_AUTHOR', True)
 DEFAULT_ADDTHIS_USER = getattr(settings, 'DEFAULT_ADDTHIS_USER', None)
@@ -60,7 +61,7 @@ class Category(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('articles_display_category', args=(self.slug,))
+        return ('articles_display_category', (self.slug,))
 
     class Meta:
         ordering = ('name',)
@@ -90,6 +91,7 @@ class Article(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique_for_year='publish_date')
     author = models.ForeignKey(User)
+    sites = models.ManyToManyField(Site, blank=True)
 
     keywords = models.TextField(blank=True)
     description = models.TextField(blank=True, help_text=_("If omitted, the description will be determined by the first bit of the article's content."))
@@ -106,8 +108,6 @@ class Article(models.Model):
     expiration_date = models.DateTimeField(blank=True, null=True, help_text=_('Leave blank if the article does not expire.'))
 
     is_active = models.BooleanField(default=True, blank=True)
-    is_commentable = models.BooleanField(default=True, blank=True)
-    display_comments = models.BooleanField(default=True, blank=True)
     login_required = models.BooleanField(blank=True, help_text=_('Enable this if users must login before they can read this article.'))
 
     use_addthis_button = models.BooleanField(_('Show AddThis button'), blank=True, default=USE_ADDTHIS_BUTTON, help_text=_('Check this to show an AddThis bookmark button when viewing an article.'))
@@ -120,7 +120,12 @@ class Article(models.Model):
         """
         Make sure that we have some rendered content to use.
         """
+
         super(Article, self).__init__(*args, **kwargs)
+
+        self._next = None
+        self._previous = None
+        self._teaser = None
 
         if self.id:
             # mark the article as inactive if it's expired and still active
@@ -136,14 +141,13 @@ class Article(models.Model):
 
     def save(self, *args):
         """
-        Renders the article using the appropriate markup language.  Pings
-        Google to let it know that this article has been updated.
+        Renders the article using the appropriate markup language.
         """
-        if self.markup == 'm':
+        if self.markup == MARKUP_MARKDOWN:
             self.rendered_content = markup.markdown(self.content)
-        elif self.markup == 'r':
+        elif self.markup == MARKUP_REST:
             self.rendered_content = markup.restructuredtext(self.content)
-        elif self.markup == 't':
+        elif self.markup == MARKUP_TEXTILE:
             self.rendered_content = markup.textile(self.content)
         else:
             self.rendered_content = self.content
@@ -153,14 +157,11 @@ class Article(models.Model):
         if self.use_addthis_button and self.addthis_use_author and not self.addthis_username:
             self.addthis_username = self.author.username
 
-        if not settings.DEBUG:
-            # try to tell google that we have a new article
-            try:
-                ping_google()
-            except Exception:
-                pass
-
         super(Article, self).save(*args)
+
+        if not len(self.sites.all()):
+            self.sites = [Site.objects.get_current()]
+            super(Article, self).save(*args)
 
     def _get_article_links(self):
         """
@@ -223,39 +224,50 @@ class Article(models.Model):
         return len(striptags(self.rendered_content).split(' '))
     word_count = property(_get_word_count)
 
+    @models.permalink
     def get_absolute_url(self):
-        return reverse('articles_display_article', args=[self.publish_date.year, self.slug])
+        return ('articles_display_article', (self.publish_date.year, self.slug))
 
     def _get_teaser(self):
         """
         Retrieve some part of the article or the article's description.
         """
-        if len(self.description.strip()):
-            text = self.description
-        else:
-            text = self.rendered_content
+        if not self._teaser:
+            if len(self.description.strip()):
+                text = self.description
+            else:
+                text = self.rendered_content
 
-        words = text.split(' ')
-        if len(words) > WORD_LIMIT:
-            text = '%s...' % ' '.join(words[:WORD_LIMIT])
-        return text
+            words = text.split(' ')
+            if len(words) > WORD_LIMIT:
+                text = '%s...' % ' '.join(words[:WORD_LIMIT])
+            self._teaser = text
+
+        return self._teaser
     teaser = property(_get_teaser)
 
     def get_next_article(self):
-        try:
-            qs = Article.objects.active().exclude(id__exact=self.id)
-            article = qs.filter(publish_date__gte=self.publish_date).order_by('publish_date')[0]
-        except (Article.DoesNotExist, IndexError):
-            article = None
-        return article
+        if not self._next:
+            try:
+                qs = Article.objects.active().exclude(id__exact=self.id)
+                article = qs.filter(publish_date__gte=self.publish_date).order_by('publish_date')[0]
+            except (Article.DoesNotExist, IndexError):
+                article = None
+            self._next = article
+
+        return self._next
 
     def get_previous_article(self):
-        try:
-            qs = Article.objects.active().exclude(id__exact=self.id)
-            article = qs.filter(publish_date__lte=self.publish_date).order_by('-publish_date')[0]
-        except (Article.DoesNotExist, IndexError):
-            article = None
-        return article
+        if not self._previous:
+            try:
+                qs = Article.objects.active().exclude(id__exact=self.id)
+                article = qs.filter(publish_date__lte=self.publish_date).order_by('-publish_date')[0]
+            except (Article.DoesNotExist, IndexError):
+                article = None
+            self._previous = article
+
+        return self._previous
 
     class Meta:
         ordering = ('-publish_date', 'title')
+

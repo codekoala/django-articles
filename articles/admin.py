@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 from models import Category, Article
 
@@ -8,8 +9,8 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
 
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'publish_date', 'expiration_date', 'is_active', 'is_commentable')
-    list_filter = ('author', 'is_active', 'publish_date', 'expiration_date')
+    list_display = ('title', 'author', 'publish_date', 'expiration_date', 'is_active')
+    list_filter = ('author', 'is_active', 'publish_date', 'expiration_date', 'sites')
     list_per_page = 25
     search_fields = ('title', 'keywords', 'description', 'content')
     date_hierarchy = 'publish_date'
@@ -30,7 +31,7 @@ class ArticleAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         ('Advanced', {
-            'fields': ('slug', 'is_active', 'is_commentable', 'display_comments', 'login_required'),
+            'fields': ('slug', 'is_active', 'login_required', 'sites'),
             'classes': ('collapse',)
         }),
     )
@@ -46,24 +47,21 @@ class ArticleAdmin(admin.ModelAdmin):
         queryset.update(is_active=False)
     mark_inactive.short_description = _('Mark select articles as inactive')
 
-    def mark_commentable(self, request, queryset):
-        queryset.update(is_commentable=True)
-    mark_commentable.short_description = _('Mark select articles as commentable')
-
-    def mark_noncommentable(self, request, queryset):
-        queryset.update(is_commentable=False)
-    mark_noncommentable.short_description = _('Mark select articles as noncommentable')
-
-    actions = (mark_active, mark_inactive, mark_commentable, mark_noncommentable)
+    actions = (mark_active, mark_inactive)
 
     def save_model(self, request, obj, form, change):
+        """Set the article's author based on the logged in user and make sure at least one site is selected"""
+
         try:
             author = obj.author
         except User.DoesNotExist:
             obj.author = request.user
+
         obj.save()
 
     def queryset(self, request):
+        """Limit the list of articles to article posted by this user unless they're a superuser"""
+
         if request.user.is_superuser:
             return self.model._default_manager.all()
         else:

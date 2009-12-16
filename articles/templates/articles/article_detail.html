@@ -1,5 +1,5 @@
 {% extends 'articles/base.html' %}
-{% load i18n humanize comments gravatar %}
+{% load i18n humanize %}
 
 {% block title %}{% trans article.title %}{% endblock %}
 
@@ -17,10 +17,7 @@
 
     <p><strong>{% trans 'Author' %}</strong>: <a href="{% url articles_by_author article.author.username %}" title="{% trans 'Read other articles by this author' %}">{{ article.author.get_name }}</a></p>
 
-    {% if article.is_commentable %}
-    {% get_comment_count for article as comment_count %}
-    <p><strong>{% trans 'Comments' %}</strong>: <a href="#comments">{{ comment_count }}</a></p>
-    {% endif %}
+    <p><strong>{% trans 'Comments' %}</strong>: <a href="#disqus_thread">&nbsp;</a></p>
 
     <p><strong>{% trans 'Word Count' %}</strong>: {{ article.word_count|intcomma }}</p>
 
@@ -47,6 +44,8 @@
     </div>
     <!-- AddThis Button END -->
     {% endif %}
+
+    <script type="text/javascript" src="http://tweetmeme.com/i/scripts/button.js"></script>
 
     <h4>{% trans 'Filed Under' %}</h4>
     <p>{% if article.categories.count %}{% for category in article.categories.all %}{% if not forloop.first %}{% ifnotequal article.categories.count 2 %},{% endifnotequal %} {% if forloop.last %}{% trans 'and' %}{% endif %} {% endif %}<a href="{% url articles_display_category category.slug %}" title="{% trans 'View all articles in this category' %}">{{ category }}</a>{% endfor %}{% else %}<a href="{% url articles_display_category 'uncategorized' %}" title="{% trans 'View all uncategorized articles' %}">{% trans 'Uncategorized' %}</a>{% endif %}</p>
@@ -90,40 +89,26 @@
 </div>
 <div class="clear"></div>
 
-{% if article.display_comments %}
-{% get_comment_list for article as comment_list %}
-{% if comment_list|length %}
-<div id="article-comments">
-    <h4 class="comments-header" id="comments">Comments</h4>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+var disqus_identifier = {{ article.id }};
+</script>
+<script type="text/javascript" src="http://disqus.com/forums/{{ disqus_forum }}/embed.js"></script>
+<noscript><a href="http://disqus.com/forums/{{ disqus_forum }}/?url=ref">View the discussion thread.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">Comments powered by <span class="logo-disqus">Disqus</span></a>
 
-    {% for comment in comment_list %}
-    {% if forloop.first %}<table class="comment-list">{% endif %}
-        <tr class="{% ifequal comment.user article.author %}author-comment{% endifequal %} {% if forloop.first %}first{% endif %} {% if forloop.last %}last{% endif %}" id="c{{ comment.id }}">
-            <td class="avatar">
-                {% if comment.user %}<a href="{% url articles_by_author comment.user %}">{% endif %}
-                <img src="{% gravatar_for_email comment.email %}" class="gravatar" alt="Gravatar for {{ comment.user }}" /><br />
-                {% if comment.user %}
-                </a><a href="{% url articles_by_author comment.user %}">{{ comment.user_name }}</a>
-                {% else %}
-                {{ comment.name|escape }}
-                {% endif %}
-            </td>
-            <td>
-                {{ comment.comment|striptags|escape|linebreaksbr|safe|urlizetrunc:40 }}
-                <div class="posted-by quiet">
-                    {{ comment.submit_date|date:"j N Y \a\t P" }}
-                </div>
-            </td>
-        </tr>
-    {% if forloop.last %}</table>{% endif %}
-    {% endfor %}
-</div>
-{% endif %}{% endif %}
-
-{% if article.is_commentable %}
-<div id="article-comments-form">
-    <h4 class="postcomment-header">Post a Comment</h4>
-    {% render_comment_form for article %}
-</div>
-{% endif %}
+<script type="text/javascript">
+//<![CDATA[
+(function() {
+    var links = document.getElementsByTagName('a');
+    var query = '?';
+    for(var i = 0; i < links.length; i++) {
+    if(links[i].href.indexOf('#disqus_thread') >= 0) {
+        query += 'url' + i + '=' + encodeURIComponent(links[i].href) + '&';
+    }
+    }
+    document.write('<script charset="utf-8" type="text/javascript" src="http://disqus.com/forums/{{ disqus_forum }}/get_num_replies.js' + query + '"></' + 'script>');
+})();
+//]]>
+</script>
 {% endblock %}

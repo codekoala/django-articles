@@ -1,23 +1,3 @@
-from django.db.models.signals import post_save
-from django.core.mail import send_mail
-from django.contrib.comments.models import Comment
-from django.conf import settings
-
-def notify_of_comment(sender, instance, created, **kwargs):
-    """
-    Only send new comment emails when we're not in development mode.
-    """
-    if not settings.DEBUG:
-        if created:
-            message = 'A new comment has been posted.\n'
-        else:
-            message = 'A comment has been updated.\n'
-        message += instance.get_as_text()
-
-        send_mail('New Comment', message, instance.user_email, [a[1] for a in settings.ADMINS])
-
-post_save.connect(notify_of_comment, sender=Comment)
-
 """
 The Pygments reStructuredText directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
