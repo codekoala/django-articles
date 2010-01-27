@@ -10,7 +10,7 @@ class Command(NoArgsCommand):
         c = connection.cursor()
 
         for article in Article.objects.all():
-            c.execute("""SELECT c.name
+            c.execute("""SELECT c.slug
 FROM articles_article_categories aac
 JOIN articles_category c
 ON aac.category_id = c.id
