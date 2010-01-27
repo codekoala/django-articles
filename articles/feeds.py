@@ -18,8 +18,8 @@ class LatestEntries(Feed):
     def item_author_name(self, item):
         return item.author.username
 
-    def item_categories(self, item):
-        return [c.name for c in item.categories.all()] + [keyword.strip() for keyword in item.keywords.split(',')]
+    def item_tags(self, item):
+        return [c.name for c in item.tags.all()] + [keyword.strip() for keyword in item.keywords.split(',')]
 
     def item_pubdate(self, item):
         return item.publish_date

@@ -274,7 +274,6 @@ def tag_cloud():
     cache_key = 'tag_cloud_tags'
     tags = cache.get(cache_key)
     if tags == None:
-        print 'here'
         MAX_WEIGHT = 5
         tags = Tag.objects.all()
 
