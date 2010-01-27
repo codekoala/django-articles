@@ -2,11 +2,8 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
-from models import Category, Article
-
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'image')
-    prepopulated_fields = {'slug': ('name',)}
+from forms import ArticleAdminForm
+from models import Tag, Article
 
 class ArticleAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'publish_date', 'expiration_date', 'is_active')
@@ -14,9 +11,10 @@ class ArticleAdmin(admin.ModelAdmin):
     list_per_page = 25
     search_fields = ('title', 'keywords', 'description', 'content')
     date_hierarchy = 'publish_date'
+    form = ArticleAdminForm
 
     fieldsets = (
-        (None, {'fields': ('title', 'content', 'markup', 'categories')}),
+        (None, {'fields': ('title', 'content', 'markup', 'tags')}),
         ('Metadata', {
             'fields': ('keywords', 'description',),
             'classes': ('collapse',)
@@ -36,7 +34,7 @@ class ArticleAdmin(admin.ModelAdmin):
         }),
     )
 
-    filter_horizontal = ('categories', 'followup_for', 'related_articles')
+    filter_horizontal = ('tags', 'followup_for', 'related_articles')
     prepopulated_fields = {'slug': ('title',)}
 
     def mark_active(self, request, queryset):
@@ -67,5 +65,5 @@ class ArticleAdmin(admin.ModelAdmin):
         else:
             return self.model._default_manager.filter(author=request.user)
 
-admin.site.register(Category, CategoryAdmin)
+admin.site.register(Tag)
 admin.site.register(Article, ArticleAdmin)

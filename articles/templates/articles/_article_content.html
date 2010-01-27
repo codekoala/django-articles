@@ -1,0 +1,7 @@
+{% load i18n %}
+<div id="article-content" class="article">
+    <h2 class="title">{% trans article.title %}</h2>
+
+    {{ article.rendered_content|safe }}
+</div>
+

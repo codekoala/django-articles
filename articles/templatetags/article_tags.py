@@ -1,6 +1,7 @@
 from django import template
+from django.core.cache import cache
 from django.core.urlresolvers import resolve, reverse, Resolver404
-from articles.models import Article, Category
+from articles.models import Article, Tag
 from datetime import datetime
 import math
 
@@ -8,19 +9,19 @@ register = template.Library()
 
 class GetCategoriesNode(template.Node):
     """
-    Retrieves a list of active article categories and places it into the context
+    Retrieves a list of active article tags and places it into the context
     """
     def __init__(self, varname):
         self.varname = varname
 
     def render(self, context):
-        categories = Category.objects.active()
-        context[self.varname] = categories
+        tags = Tag.objects.all()
+        context[self.varname] = tags
         return ''
 
-def get_article_categories(parser, token):
+def get_article_tags(parser, token):
     """
-    Retrieves a list of active article categories and places it into the context
+    Retrieves a list of active article tags and places it into the context
     """
     args = token.split_contents()
     argc = len(args)
@@ -28,7 +29,7 @@ def get_article_categories(parser, token):
     try:
         assert argc == 3 and args[1] == 'as'
     except AssertionError:
-        raise template.TemplateSyntaxError('get_article_categories syntax: {% get_article_categories as varname %}')
+        raise template.TemplateSyntaxError('get_article_tags syntax: {% get_article_tags as varname %}')
 
     return GetCategoriesNode(args[2])
 
@@ -111,40 +112,45 @@ class GetArticleArchivesNode(template.Node):
         self.varname = varname
 
     def render(self, context):
-        archives = {}
+        cache_key = 'article_archive_list'
+        dt_archives = cache.get(cache_key)
+        if dt_archives is None:
+            archives = {}
 
-        # iterate over all active articles
-        for article in Article.objects.active():
-            pub = article.publish_date
+            # iterate over all active articles
+            for article in Article.objects.active():
+                pub = article.publish_date
 
-            # see if we already have an article in this year
-            if not archives.has_key(pub.year):
-                # if not, initialize a dict for the year
-                archives[pub.year] = {}
+                # see if we already have an article in this year
+                if not archives.has_key(pub.year):
+                    # if not, initialize a dict for the year
+                    archives[pub.year] = {}
 
-            # make sure we know that we have an article posted in this month/year
-            archives[pub.year][pub.month] = True
+                # make sure we know that we have an article posted in this month/year
+                archives[pub.year][pub.month] = True
 
-        dt_archives = []
+            dt_archives = []
 
-        # now sort the years, so they don't appear randomly on the page
-        years = list(int(k) for k in archives.keys())
-        years.sort()
+            # now sort the years, so they don't appear randomly on the page
+            years = list(int(k) for k in archives.keys())
+            years.sort()
 
-        # more recent years will appear first in the resulting collection
-        years.reverse()
+            # more recent years will appear first in the resulting collection
+            years.reverse()
 
-        # iterate over all years
-        for year in years:
-            # sort the months of this year in which articles were posted
-            m = list(int(k) for k in archives[year].keys())
-            m.sort()
+            # iterate over all years
+            for year in years:
+                # sort the months of this year in which articles were posted
+                m = list(int(k) for k in archives[year].keys())
+                m.sort()
 
-            # now create a list of datetime objects for each month/year
-            months = [datetime(year, month, 1) for month in m]
+                # now create a list of datetime objects for each month/year
+                months = [datetime(year, month, 1) for month in m]
 
-            # append this list to our final collection
-            dt_archives.append( ( year, tuple(months) ) )
+                # append this list to our final collection
+                dt_archives.append( ( year, tuple(months) ) )
+
+            cache.set(cache_key, dt_archives)
 
         # put our collection into the context
         context[self.varname] = dt_archives
@@ -255,9 +261,48 @@ def get_page_url(parser, token):
 
     return GetPageURLNode(args[1], varname)
 
+class TagCloudNode(template.Node):
+    def __init__(self, varname):
+        self.varname = varname
+
+    def render(self, context):
+        context[self.varname] = tags
+
+def tag_cloud():
+    """Provides the tags with a "weight" attribute to build a tag cloud"""
+
+    cache_key = 'tag_cloud_tags'
+    tags = cache.get(cache_key)
+    if tags == None:
+        print 'here'
+        MAX_WEIGHT = 5
+        tags = Tag.objects.all()
+
+        min_count = max_count = tags[0].article_set.count()
+        for tag in tags:
+            tag.count = tag.article_set.count()
+            if tag.count < min_count:
+                min_count = tag.count
+            if max_count < tag.count:
+                max_count = tag.count
+
+        # calculate count range, and avoid dbz
+        _range = float(max_count - min_count)
+        if _range == 0.0:
+            _range = 1.0
+
+        # calculate tag weights
+        for tag in tags:
+            tag.weight = int(MAX_WEIGHT * (tag.count - min_count) / _range)
+
+        cache.set(cache_key, tags)
+
+    return {'tags': tags}
+
 # register dem tags!
 register.tag(get_articles)
-register.tag(get_article_categories)
+register.tag(get_article_tags)
 register.tag(get_article_archives)
 register.tag(divide_object_list)
 register.tag(get_page_url)
+register.inclusion_tag('articles/_tag_cloud.html')(tag_cloud)

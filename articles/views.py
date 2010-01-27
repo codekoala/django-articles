@@ -5,12 +5,12 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponsePermanentRedirect, Http404, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-from articles.models import Article, Category
+from articles.models import Article, Tag
 from datetime import datetime
 
 ARTICLE_PAGINATION = getattr(settings, 'ARTICLE_PAGINATION', 20)
 
-def display_blog_page(request, category=None, username=None, year=None, month=None, page=1):
+def display_blog_page(request, tag=None, username=None, year=None, month=None, page=1):
     """
     Handles all of the magic behind the pages that list articles in any way.
     Yes, it's dirty to have so many URLs go to one view, but I'd rather do that
@@ -18,17 +18,11 @@ def display_blog_page(request, category=None, username=None, year=None, month=No
     """
     context = {}
 
-    if category:
-        # listing articles in a category
-        if category == 'uncategorized':
-            articles = Article.objects.uncategorized()
-            template = 'articles/uncategorized_article_list.html'
-
-        else:
-            category = get_object_or_404(Category, slug=category)
-            articles = category.article_set.active()
-            template = 'articles/display_category.html'
-            context['category'] = category
+    if tag:
+        tag = get_object_or_404(Tag, name__iexact=tag)
+        articles = tag.article_set.active()
+        template = 'articles/display_tag.html'
+        context['tag'] = tag
 
     elif username:
         # listing articles by a particular author
@@ -60,15 +54,12 @@ def display_blog_page(request, category=None, username=None, year=None, month=No
 
     context.update({'paginator': paginator,
                     'page_obj': page})
+    variables = RequestContext(request, context)
 
-    return render_to_response(template,
-                              context,
-                              context_instance=RequestContext(request))
+    return render_to_response(template, variables)
 
 def display_article(request, year, slug, template='articles/article_detail.html'):
-    """
-    Displays a single article.
-    """
+    """Displays a single article."""
 
     try:
         article = Article.objects.active().get(publish_date__year=year, slug=slug)
@@ -79,12 +70,14 @@ def display_article(request, year, slug, template='articles/article_detail.html'
     if article.login_required and not request.user.is_authenticated():
         return HttpResponseRedirect(reverse('auth_login') + '?next=' + request.path)
 
-    return render_to_response(template,
-                              {'article': article,
-                               'disqus_forum': settings.DISQUS_FORUM_SHORTNAME},
-                              context_instance=RequestContext(request))
+    variables = RequestContext(request, {
+        'article': article,
+        'disqus_forum': settings.DISQUS_FORUM_SHORTNAME,
+    })
+    return render_to_response(template, variables)
 
 def redirect_to_article(request, year, month, day, slug):
     # this is a little snippet to handle URLs that are formatted the old way.
     article = get_object_or_404(Article, publish_date__year=year, slug=slug)
     return HttpResponsePermanentRedirect(article.get_absolute_url())
+

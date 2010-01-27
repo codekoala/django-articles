@@ -45,27 +45,18 @@ def get_name(user):
         return user.username
 User.get_name = get_name
 
-class CategoryManager(models.Manager):
-    def active(self):
-        return self.get_query_set().filter(is_active=True)
-
-class Category(models.Model):
-    name = models.CharField(max_length=50)
-    slug = models.SlugField(unique=True)
-    image = models.ImageField(upload_to='categories/', blank=True, null=True)
-    is_active = models.BooleanField(default=True, blank=True)
-
-    objects = CategoryManager()
+class Tag(models.Model):
+    name = models.CharField(max_length=64, unique=True)
 
     def __unicode__(self):
         return self.name
 
+    @models.permalink
     def get_absolute_url(self):
-        return ('articles_display_category', (self.slug,))
+        return ('articles_display_tag', (self.name,))
 
     class Meta:
         ordering = ('name',)
-        verbose_name_plural = 'categories'
 
 class ArticleManager(models.Manager):
     def active(self):
@@ -80,13 +71,6 @@ class ArticleManager(models.Manager):
                 publish_date__lte=now,
                 is_active=True)
 
-    def uncategorized(self):
-        """
-        Find all articles that were not assigned a category.
-        """
-
-        return self.active().filter(categories__isnull=True)
-
 class Article(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique_for_year='publish_date')
@@ -100,7 +84,7 @@ class Article(models.Model):
     content = models.TextField()
     rendered_content = models.TextField()
 
-    categories = models.ManyToManyField(Category, help_text=_('Select any categories to classify the content of this article.'), blank=True)
+    tags = models.ManyToManyField(Tag, help_text=_('Tags that describe this article'), blank=True)
     followup_for = models.ManyToManyField('self', symmetrical=False, blank=True, help_text=_('Select any other articles that this article follows up on.'), related_name='followups')
     related_articles = models.ManyToManyField('self', blank=True)
 
@@ -157,8 +141,13 @@ class Article(models.Model):
         if self.use_addthis_button and self.addthis_use_author and not self.addthis_username:
             self.addthis_username = self.author.username
 
+        # if we don't have keywords, use the tags
+        if len(self.keywords.strip()) == 0:
+            self.keywords = ', '.join([t.name for t in self.tags.all()])
+
         super(Article, self).save(*args)
 
+        # we have to have an object before we can create relationships like this
         if not len(self.sites.all()):
             self.sites = [Site.objects.get_current()]
             super(Article, self).save(*args)

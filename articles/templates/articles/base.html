@@ -3,7 +3,7 @@
 
 {% block content %}
 <div id="article-archives">
-    <h2>{% trans 'Article Archives' %}</h2>
+    <h2 class="title">{% trans 'Article Archives' %}</h2>
     {% get_article_archives as archives %}
     {% for year in archives %}
     {% if forloop.first %}<ul>{% endif %}

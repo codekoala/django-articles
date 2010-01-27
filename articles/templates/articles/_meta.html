@@ -1,0 +1,81 @@
+{% load i18n humanize %}
+
+<div id="article-meta">
+    <h4>Meta</h4>
+
+    <p><strong>{% trans 'Published' %}</strong>: {{ article.publish_date|naturalday }}</p>
+
+    <p><strong>{% trans 'Author' %}</strong>: <a href="{% url articles_by_author article.author.username %}" title="{% trans 'Read other articles by this author' %}">{{ article.author.get_name }}</a></p>
+
+    <p><strong>{% trans 'Comments' %}</strong>: <a href="#disqus_thread">&nbsp;</a></p>
+
+    <p><strong>{% trans 'Word Count' %}</strong>: {{ article.word_count|intcomma }}</p>
+
+    {% if article.get_next_article %}
+    <p>
+        <strong>{% trans 'Next' %}</strong>:
+        <a href="{{ article.get_next_article.get_absolute_url }}">{{ article.get_next_article.title }}</a>
+    </p>
+    {% endif %}
+
+    {% if article.get_previous_article %}
+    <p>
+        <strong>{% trans 'Previous' %}</strong>:
+        <a href="{{ article.get_previous_article.get_absolute_url }}">{{ article.get_previous_article.title }}</a>
+    </p>
+    {% endif %}
+
+    {% if article.use_addthis_button and article.addthis_username %}
+    <!-- AddThis Button BEGIN -->
+    <div>
+        <script type="text/javascript">var addthis_pub="{{ article.addthis_username }}";</script>
+        <a href="http://www.addthis.com/bookmark.php?v=20" onmouseover="return addthis_open(this, '', '[URL]', '[TITLE]')" onmouseout="addthis_close()" onclick="return addthis_sendto()"><img src="http://s7.addthis.com/static/btn/lg-share-en.gif" width="125" height="16" alt="Bookmark and Share" style="border:0"/></a>
+        <script type="text/javascript" src="http://s7.addthis.com/js/200/addthis_widget.js"></script>
+    </div>
+    <!-- AddThis Button END -->
+    {% endif %}
+
+    <script type="text/javascript" src="http://tweetmeme.com/i/scripts/button.js"></script>
+
+    <h4>{% trans 'Tags' %}</h4>
+    <p>{% if article.tags.count %}{% for tag in article.tags.all %}<a href="{{ tag.get_absolute_url }}">{{ tag.name }}</a> {% endfor %}{% else %}None{% endif %}</p>
+
+    {% for fu in article.followups.active %}
+    {% if forloop.first %}<h4 class="hasfollowup-header">{% trans 'Follow-Up Articles' %}</h4>
+
+    <ul class="followups">{% endif %}
+        <li>
+            <a href="{{ fu.get_absolute_url }}" title="{% trans 'Read this follow-up article' %}">{{ fu.title }}</a>, {% trans 'posted' %} {{ fu.publish_date|naturalday }}
+        </li>
+    {% if forloop.last %}</ul>{% endif %}
+    {% endfor %}
+
+    {% for fu in article.followup_for.active %}
+    {% if forloop.first %}<h4 class="followup-header">{% trans 'Follows Up On' %}</h4>
+
+    <ul class="followups">{% endif %}
+        <li>
+            <a href="{{ fu.get_absolute_url }}" title="{% trans 'Read this article' %}">{{ fu.title }}</a>, {% trans 'posted' %} {{ fu.publish_date|naturalday }}
+        </li>
+    {% if forloop.last %}</ul>{% endif %}
+    {% endfor %}
+
+    {% for ra in article.related_articles.active %}
+    {% if forloop.first %}<h4 class="related-header">{% trans 'Related Articles' %}</h4>
+
+    <ul class="related-articles">{% endif %}
+        <li>
+            <a href="{{ ra.get_absolute_url }}" title="{% trans 'Read this related article' %}">{{ ra.title }}</a>, {% trans 'posted' %}  {{ ra.publish_date|naturalday }}
+        </li>
+    {% if forloop.last %}</ul>{% endif %}
+    {% endfor %}
+
+    {% for url,title in article.links %}
+    {% if forloop.first %}<h4>{% trans 'Article Links' %}</h4>
+    <ol>{% endif %}
+        <li><a href="{{ url }}" title="{{ title }}">{{ title|safe|truncatewords:10 }}</a></li>
+    {% if forloop.last %}</ol>{% endif %}
+    {% endfor %}
+</div>
+<div class="clear"></div>
+

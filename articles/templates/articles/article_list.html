@@ -4,7 +4,7 @@
 {% block title %}{% trans 'Articles' %}{% endblock %}
 
 {% block articles-content %}
-<h2>{% trans 'Articles' %}{% ifnotequal paginator.num_pages 1 %}, {% trans 'page' %} {{ page_obj.number }}{% endifnotequal %}</h2>
+<h2 class="title">{% trans 'Articles' %}{% ifnotequal paginator.num_pages 1 %}, {% trans 'page' %} {{ page_obj.number }}{% endifnotequal %}</h2>
 
 {% for article in page_obj.object_list %}
 {% include 'articles/_articles.html' %}

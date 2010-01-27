@@ -1,7 +1,7 @@
 from django.contrib.syndication.feeds import Feed
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
-from articles.models import Article, Category
+from articles.models import Article
 
 SITE = Site.objects.get_current()
 
@@ -24,11 +24,11 @@ class LatestEntries(Feed):
     def item_pubdate(self, item):
         return item.publish_date
 
-class CategoryFeed(Feed):
+class TagFeed(Feed):
     def get_object(self, bits):
         if len(bits) != 1:
             raise FeedDoesNotExist
-        return Category.objects.active().get(slug__exact=bits[0])
+        return Tag.objects.active().get(slug__exact=bits[0])
 
     def title(self, obj):
         return "%s: Newest Articles Tagged '%s'" % (SITE.name, obj.slug)
@@ -55,3 +55,4 @@ class CategoryFeed(Feed):
 
     def item_pubdate(self, item):
         return item.publish_date
+
