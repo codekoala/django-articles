@@ -52,13 +52,13 @@ class Tag(models.Model):
     def __unicode__(self):
         return self.name
 
-    def save(self, *args):
+    def save(self, *args, **kwargs):
         """Cleans up any characters I don't want in a URL"""
 
         # replace spaces with dashes, in case someone adds such a tag manually
         self.name = self.name.replace(' ', '-')
         self.name = TAG_RE.sub('', self.name)
-        super(Tag, self).save(*args)
+        super(Tag, self).save(*args, **kwargs)
 
     @models.permalink
     def get_absolute_url(self):
@@ -139,7 +139,7 @@ class Article(models.Model):
     def __unicode__(self):
         return self.title
 
-    def save(self, *args):
+    def save(self, *args, **kwargs):
         """
         Renders the article using the appropriate markup language.
         """
@@ -158,7 +158,7 @@ class Article(models.Model):
         if self.use_addthis_button and self.addthis_use_author and not self.addthis_username:
             self.addthis_username = self.author.username
 
-        super(Article, self).save(*args)
+        super(Article, self).save(*args, **kwargs)
         requires_save = False
 
         # if we don't have keywords, use the tags
@@ -177,7 +177,7 @@ class Article(models.Model):
             requires_save = True
 
         if requires_save:
-            super(Article, self).save(*args)
+            super(Article, self).save(*args, **kwargs)
 
     def _get_article_links(self):
         """
