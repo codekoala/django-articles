@@ -1,2 +1,2 @@
 include LICENSE README
-recursive-include articles *.py *.html *.po *.mo
+recursive-include articles *.py *.html *.po *.mo *.gif *.js *.css
