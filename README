@@ -32,10 +32,18 @@ Download ``django-articles`` using *one* of the following methods:
 Checkout from Mercurial
 -----------------------
 
-{{{
-hg clone http://django-articles.googlecode.com/hg/ django-articles
-hg clone http://bitbucket.org/codekoala/django-articles/
-}}}
+Use one of the following commands::
+
+    hg clone http://django-articles.googlecode.com/hg/ django-articles
+    hg clone http://bitbucket.org/codekoala/django-articles/
+
+The CheeseShop
+--------------
+
+Use one of the following commands::
+
+    pip install django-articles
+    easy_install django-articles
 
 Configuration
 =============
