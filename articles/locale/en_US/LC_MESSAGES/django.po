@@ -1,0 +1,227 @@
+# django-articles: English translation.
+# Copyright (C) 2008-2010
+# This file is distributed under the same license as the django-articles package.
+# Josh VanderLinden <codekoala@gmail.com>, 2010
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: django-articles dev\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-01-29 07:32-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Josh VanderLinden <codekoala@gmail.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: admin.py:42
+msgid "Mark select articles as active"
+msgstr ""
+
+#: admin.py:46
+msgid "Mark select articles as inactive"
+msgstr ""
+
+#: forms.py:8
+msgid "Words that describe this article"
+msgstr ""
+
+#: models.py:22
+msgid "HTML/Plain Text"
+msgstr ""
+
+#: models.py:23
+msgid "Markdown"
+msgstr ""
+
+#: models.py:24
+msgid "ReStructured Text"
+msgstr ""
+
+#: models.py:25
+msgid "Textile"
+msgstr ""
+
+#: models.py:83
+msgid ""
+"Select the type of markup you are using in this article.\n"
+"<ul>\n"
+"<li><a href=\"http://daringfireball.net/projects/markdown/basics\" target="
+"\"_blank\">Markdown Guide</a></li>\n"
+"<li><a href=\"http://docutils.sourceforge.net/docs/user/rst/quickref.html\" "
+"target=\"_blank\">ReStructured Text Guide</a></li>\n"
+"<li><a href=\"http://thresholdstate.com/articles/4312/the-textile-reference-"
+"manual\" target=\"_blank\">Textile Guide</a></li>\n"
+"</ul>"
+msgstr ""
+
+#: models.py:97
+msgid ""
+"If omitted, the description will be determined by the first bit of the "
+"article's content."
+msgstr ""
+
+#: models.py:103
+msgid "Tags that describe this article"
+msgstr ""
+
+#: models.py:104
+msgid "Select any other articles that this article follows up on."
+msgstr ""
+
+#: models.py:107
+msgid "The date and time this article shall appear online."
+msgstr ""
+
+#: models.py:108
+msgid "Leave blank if the article does not expire."
+msgstr ""
+
+#: models.py:111
+msgid "Enable this if users must login before they can read this article."
+msgstr ""
+
+#: models.py:113
+msgid "Show AddThis button"
+msgstr ""
+
+#: models.py:113
+msgid "Check this to show an AddThis bookmark button when viewing an article."
+msgstr ""
+
+#: models.py:114
+msgid "Use article author's username"
+msgstr ""
+
+#: models.py:114
+msgid ""
+"Check this if you want to use the article author's username for the AddThis "
+"button.  Respected only if the username field is left empty."
+msgstr ""
+
+#: models.py:115
+msgid "AddThis Username"
+msgstr ""
+
+#: models.py:115
+msgid "The AddThis username to use for the button."
+msgstr ""
+
+#: templates/articles/_articles.html:4 templates/articles/_meta.html:58
+msgid "Read this article"
+msgstr ""
+
+#: templates/articles/_articles.html:6
+msgid "Posted on"
+msgstr ""
+
+#: templates/articles/_articles.html:7
+msgid "by"
+msgstr ""
+
+#: templates/articles/_articles.html:7
+msgid "View articles posted by"
+msgstr ""
+
+#: templates/articles/_meta.html:6
+msgid "Published"
+msgstr ""
+
+#: templates/articles/_meta.html:8
+msgid "Author"
+msgstr ""
+
+#: templates/articles/_meta.html:8
+msgid "Read other articles by this author"
+msgstr ""
+
+#: templates/articles/_meta.html:10
+msgid "Comments"
+msgstr ""
+
+#: templates/articles/_meta.html:12
+msgid "Word Count"
+msgstr ""
+
+#: templates/articles/_meta.html:16
+msgid "Next"
+msgstr ""
+
+#: templates/articles/_meta.html:23
+msgid "Previous"
+msgstr ""
+
+#: templates/articles/_meta.html:40
+msgid "Tags"
+msgstr ""
+
+#: templates/articles/_meta.html:44
+msgid "Follow-Up Articles"
+msgstr ""
+
+#: templates/articles/_meta.html:48
+msgid "Read this follow-up article"
+msgstr ""
+
+#: templates/articles/_meta.html:48 templates/articles/_meta.html.py:58
+#: templates/articles/_meta.html:68
+msgid "posted"
+msgstr ""
+
+#: templates/articles/_meta.html:54
+msgid "Follows Up On"
+msgstr ""
+
+#: templates/articles/_meta.html:64
+msgid "Related Articles"
+msgstr ""
+
+#: templates/articles/_meta.html:68
+msgid "Read this related article"
+msgstr ""
+
+#: templates/articles/_meta.html:74
+msgid "Article Links"
+msgstr ""
+
+#: templates/articles/article_list.html:4
+#: templates/articles/article_list.html:7
+msgid "Articles"
+msgstr ""
+
+#: templates/articles/article_list.html:7 templates/articles/by_author.html:7
+#: templates/articles/display_tag.html:7 templates/articles/in_month.html:7
+#: templates/articles/uncategorized_article_list.html:7
+msgid "page"
+msgstr ""
+
+#: templates/articles/base.html:6
+msgid "Article Archives"
+msgstr ""
+
+#: templates/articles/base.html:14
+msgid "View articles posted in this month"
+msgstr ""
+
+#: templates/articles/by_author.html:4
+msgid "Articles By Author"
+msgstr ""
+
+#: templates/articles/by_author.html:7
+msgid "Articles By"
+msgstr ""
+
+#: templates/articles/display_tag.html:4 templates/articles/display_tag.html:7
+msgid "Articles Tagged"
+msgstr ""
+
+#: templates/articles/in_month.html:4 templates/articles/in_month.html.py:7
+msgid "Articles From"
+msgstr ""
+
+#: templates/articles/uncategorized_article_list.html:4
+#: templates/articles/uncategorized_article_list.html:7
+msgid "Uncategorized Articles"
+msgstr ""
