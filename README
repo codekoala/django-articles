@@ -1,65 +1,71 @@
 django-articles is the blog engine that I use on codekoala.com
 
-==Features==
+Features
+========
 
-  * Tracks the following information about your visitors:
-    * Session key
-    * IP address
-    * User agent
-    * Whether or not they are a registered user and logged in
-    * Where they came from (http-referer)
-    * What page on your site they last visited
-    * How many pages on your site they have visited
-  * Allows user-agent filtering for visitor articles
-  * Automatic clean-up of old visitor records
-  * Can ban certain IP addresses, rendering the site useless to visitors from those IP's (great for stopping spam)
-  * The ability to have a live feed of active users on your website
-  * Template tags to:
-    * display how many active users there are on your site
-    * determine how many active users are on the same page within your site
-  * Optional "Active Visitors Map" to see where visitors are in the world
+* Tags for articles, with a tag cloud template tag
+* Ability to post in the future
+* Article expiration facilities
+* Allows articles to be written in plain text/HTML or using Markdown, ReStructured Text, or Textile markup
+* Related articles
+* Follow-up articles
+* Disqus comments
+* Article archive, with pagination
+* Internationalization-ready
+* Detects links in articles and creates a per-article index for you
+* Word count
+* RSS feeds for the latest articles
+* RSS feeds for the latest articles by tag
 
-==Requirements==
+Requirements
+============
 
-`django-articles` wants a modern version of Django--something after 1.0.  It used to rely on `django.contrib.comments` for commenting needs, but I recently switched to [http://www.disqus.com/ Disqus].  Included herein is a management command to convert `django.contrib.comments` comments to Disqus.
+``django-articles`` wants a modern version of Django--something after 1.1.  It used to rely on ``django.contrib.comments`` for commenting needs, but I recently switched to `Disqus <http://www.disqus.com/>`_.  Included herein is a management command to convert ``django.contrib.comments`` comments to Disqus.
 
-This project also expects `django.contrib.sites`, `django.contrib.admin`, `django.contrib.markup`, `django.contrib.auth`, `django.contrib.humanize`, and `django.contrib.syndication` to be properly installed.
+This project also expects ``django.contrib.sites``, ``django.contrib.admin``, ``django.contrib.markup``, ``django.contrib.auth``, ``django.contrib.humanize``, and ``django.contrib.syndication`` to be properly installed.
 
-==Installation==
+Installation
+============
 
-Download `django-articles` using *one* of the following methods:
+Download ``django-articles`` using *one* of the following methods:
 
-===Checkout from Mercurial===
+Checkout from Mercurial
+-----------------------
 
 {{{
 hg clone http://django-articles.googlecode.com/hg/ django-articles
 hg clone http://bitbucket.org/codekoala/django-articles/
 }}}
 
-==Configuration==
+Configuration
+=============
 
-First of all, you must add this project to your list of `INSTALLED_APPS` in `settings.py`:
+First of all, you must add this project to your list of ``INSTALLED_APPS`` in ``settings.py``:
 
 {{{
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.humanize',
+    'django.contrib.markup',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'django.contrib.syndication',
     ...
     'articles',
     ...
 )
 }}}
 
-Run `manage.py syncdb`.  This creates a few tables in your database that are necessary for operation.
+Run ``manage.py syncdb``.  This creates a few tables in your database that are necessary for operation.
 
-Next, set a couple of settings in your `settings.py`:
+Next, set a couple of settings in your ``settings.py``:
 
- * `DISQUS_USER_API_KEY`: Your user API key from Disqus.  This is free, and you can learn how to get it from [http://2ze.us/ME Disqus's API Page] or you can try http://disqus.com/api/get_my_key/ when you're logged into Disqus.  You only need this one if you're going to be converting comments from `django.contrib.comments` to Disqus.
- * `DISQUS_FORUM_SHORTNAME`: set this to `True` if you want to see markers on the map
+ * ``DISQUS_USER_API_KEY``: Your user API key from Disqus.  This is free, and you can learn how to get it from  `Disqus's API Page <http://2ze.us/ME>`_ or you can try http://disqus.com/api/get_my_key/ when you're logged into Disqus.  You only need this one if you're going to be converting comments from ``django.contrib.comments`` to Disqus.
+ * ``DISQUS_FORUM_SHORTNAME``: set this to ``True`` if you want to see markers on the map
 
-When that's done, you should be able to begin using `django-articles`!
+When that's done, you should be able to begin using ``django-articles``!
 
 Good luck!  Please contact me with any questions or concerns you have with the project!
+
