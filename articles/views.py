@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, EmptyPage
 from django.core.urlresolvers import reverse
-from django.http import HttpResponsePermanentRedirect, Http404, HttpResponseRedirect
+from django.http import HttpResponsePermanentRedirect, Http404, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from articles.models import Article, Tag
@@ -80,4 +80,13 @@ def redirect_to_article(request, year, month, day, slug):
     # this is a little snippet to handle URLs that are formatted the old way.
     article = get_object_or_404(Article, publish_date__year=year, slug=slug)
     return HttpResponsePermanentRedirect(article.get_absolute_url())
+
+def ajax_tag_autocomplete(request):
+    """Offers a list of existing tags that match the specified query"""
+
+    if 'q' in request.GET:
+        tags = Tag.objects.filter(name__istartswith=request.GET['q'])[:10]
+        return HttpResponse(u'\n'.join(tag.name for tag in tags))
+
+    return HttpResponse()
 

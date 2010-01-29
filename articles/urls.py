@@ -21,4 +21,7 @@ urlpatterns += patterns('',
     url(r'^author/(?P<username>.*)/$', views.display_blog_page, name='articles_by_author'),
 
     url(r'^(?P<year>\d{4})/(?P<slug>.*)/$', views.display_article, name='articles_display_article'),
+
+    # AJAX
+    url(r'^ajax/tag/autocomplete/$', views.ajax_tag_autocomplete, name='articles_tag_autocomplete'),
 )
