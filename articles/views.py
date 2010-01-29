@@ -72,7 +72,7 @@ def display_article(request, year, slug, template='articles/article_detail.html'
 
     variables = RequestContext(request, {
         'article': article,
-        'disqus_forum': settings.DISQUS_FORUM_SHORTNAME,
+        'disqus_forum': getattr(settings, 'DISQUS_FORUM_SHORTNAME', None),
     })
     return render_to_response(template, variables)
 

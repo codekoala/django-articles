@@ -33,6 +33,7 @@ DEFAULT_ADDTHIS_USER = getattr(settings, 'DEFAULT_ADDTHIS_USER', None)
 # regex used to find links in an article
 LINK_RE = re.compile('<a.*?href="(.*?)".*?>(.*?)</a>', re.I|re.M)
 TITLE_RE = re.compile('<title>(.*?)</title>', re.I|re.M)
+TAG_RE = re.compile('[^a-z0-9\-_\+\@\$\%\^\*\(\)\{\}\[\]\:\'\<\>,=\.\|\\\]?', re.I)
 
 def get_name(user):
     """
@@ -50,6 +51,14 @@ class Tag(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    def save(self, *args):
+        """Cleans up any characters I don't want in a URL"""
+
+        # replace spaces with dashes, in case someone adds such a tag manually
+        self.name = self.name.replace(' ', '-')
+        self.name = TAG_RE.sub('', self.name)
+        super(Tag, self).save(*args)
 
     @models.permalink
     def get_absolute_url(self):
@@ -71,16 +80,23 @@ class ArticleManager(models.Manager):
                 publish_date__lte=now,
                 is_active=True)
 
+MARKUP_HELP = _("""Select the type of markup you are using in this article.
+<ul>
+<li><a href="http://daringfireball.net/projects/markdown/basics" target="_blank">Markdown Guide</a></li>
+<li><a href="http://docutils.sourceforge.net/docs/user/rst/quickref.html" target="_blank">ReStructured Text Guide</a></li>
+<li><a href="http://thresholdstate.com/articles/4312/the-textile-reference-manual" target="_blank">Textile Guide</a></li>
+</ul>""")
+
 class Article(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique_for_year='publish_date')
     author = models.ForeignKey(User)
     sites = models.ManyToManyField(Site, blank=True)
 
-    keywords = models.TextField(blank=True)
+    keywords = models.TextField(blank=True, help_text=_("If omitted, the keywords will be the same as the article tags."))
     description = models.TextField(blank=True, help_text=_("If omitted, the description will be determined by the first bit of the article's content."))
 
-    markup = models.CharField(max_length=1, choices=MARKUP_OPTIONS, default=MARKUP_DEFAULT, help_text=_('Select the type of markup you are using in this article.'))
+    markup = models.CharField(max_length=1, choices=MARKUP_OPTIONS, default=MARKUP_DEFAULT, help_text=MARKUP_HELP)
     content = models.TextField()
     rendered_content = models.TextField()
 
@@ -127,6 +143,7 @@ class Article(models.Model):
         """
         Renders the article using the appropriate markup language.
         """
+
         if self.markup == MARKUP_MARKDOWN:
             self.rendered_content = markup.markdown(self.content)
         elif self.markup == MARKUP_REST:
@@ -141,15 +158,25 @@ class Article(models.Model):
         if self.use_addthis_button and self.addthis_use_author and not self.addthis_username:
             self.addthis_username = self.author.username
 
+        super(Article, self).save(*args)
+        requires_save = False
+
         # if we don't have keywords, use the tags
         if len(self.keywords.strip()) == 0:
             self.keywords = ', '.join([t.name for t in self.tags.all()])
+            requires_save = True
 
-        super(Article, self).save(*args)
+        # if we don't have a description, use the teaser
+        if len(self.description.strip()) == 0:
+            self.description = self.teaser
+            requires_save = True
 
         # we have to have an object before we can create relationships like this
         if not len(self.sites.all()):
             self.sites = [Site.objects.get_current()]
+            requires_save = True
+
+        if requires_save:
             super(Article, self).save(*args)
 
     def _get_article_links(self):
@@ -207,9 +234,8 @@ class Article(models.Model):
     links = property(_get_article_links)
 
     def _get_word_count(self):
-        """
-        Stupid word counter for an article.
-        """
+        """Stupid word counter for an article."""
+
         return len(striptags(self.rendered_content).split(' '))
     word_count = property(_get_word_count)
 
@@ -236,6 +262,8 @@ class Article(models.Model):
     teaser = property(_get_teaser)
 
     def get_next_article(self):
+        """Determines the next active article"""
+
         if not self._next:
             try:
                 qs = Article.objects.active().exclude(id__exact=self.id)
@@ -247,6 +275,8 @@ class Article(models.Model):
         return self._next
 
     def get_previous_article(self):
+        """Determines the previous active article"""
+
         if not self._previous:
             try:
                 qs = Article.objects.active().exclude(id__exact=self.id)

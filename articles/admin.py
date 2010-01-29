@@ -14,7 +14,7 @@ class ArticleAdmin(admin.ModelAdmin):
     form = ArticleAdminForm
 
     fieldsets = (
-        (None, {'fields': ('title', 'content', 'markup', 'tags')}),
+        (None, {'fields': ('title', 'content', 'tags', 'markup')}),
         ('Metadata', {
             'fields': ('keywords', 'description',),
             'classes': ('collapse',)

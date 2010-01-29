@@ -1,6 +1,9 @@
 {% extends 'articles/base.html' %}
+{% load i18n %}
 
 {% block title %}{% trans article.title %}{% endblock %}
+{% block meta-keywords %}{{ object.keywords|escape }}{% endblock %}
+{% block meta-description %}{{ object.description|escape }}{% endblock %}
 
 {% block content %}
 

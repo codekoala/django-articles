@@ -1,8 +1,11 @@
 from django import forms
+from django.utils.translation import ugettext_lazy as _
 from models import Article, Tag
 
 class ArticleAdminForm(forms.ModelForm):
-    tags = forms.CharField(initial='', required=False)
+    tags = forms.CharField(initial='', required=False,
+                           widget=forms.TextInput(attrs={'size': 100}),
+                           help_text=_('Words that describe this article'))
 
     def __init__(self, *args, **kwargs):
         """Sets the list of tags to be a string"""

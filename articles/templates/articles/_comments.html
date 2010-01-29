@@ -1,3 +1,4 @@
+{% if disqus_forum %}
 <div id="disqus_thread"></div>
 <script type="text/javascript">
 var disqus_identifier = {{ article.id }};
@@ -20,4 +21,5 @@ var disqus_identifier = {{ article.id }};
 })();
 //]]>
 </script>
+{% endif %}
 
