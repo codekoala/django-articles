@@ -1,10 +1,14 @@
+from django.conf import settings
 from django.contrib.syndication.feeds import Feed
+from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
-from django.contrib.sites.models import Site
 from articles.models import Article, Tag
 
 SITE = Site.objects.get_current()
+
+# default to 24 hours for feed caching
+FEED_TIMEOUT = getattr(settings, 'ARTICLE_FEED_TIMEOUT', 86400)
 
 class LatestEntries(Feed):
     def title(self):
@@ -18,8 +22,8 @@ class LatestEntries(Feed):
         articles = cache.get(key)
 
         if articles is None:
-            articles = Article.objects.active().order_by('-publish_date')[:15]
-            cache.set(key, articles)
+            articles = list(Article.objects.active().order_by('-publish_date')[:15])
+            cache.set(key, articles, FEED_TIMEOUT)
 
         return articles
 
@@ -37,7 +41,7 @@ class TagFeed(Feed):
         if len(bits) != 1:
             raise FeedDoesNotExist
 
-        return Tag.objects.get(name__exact=bits[0])
+        return Tag.objects.get(name__iexact=bits[0])
 
     def title(self, obj):
         return "%s: Newest Articles Tagged '%s'" % (SITE.name, obj.name)
@@ -55,11 +59,11 @@ class TagFeed(Feed):
 
     def item_set(self, obj):
         key = 'articles_for_%s' % obj.name
-        #articles = cache.get(key)
+        articles = cache.get(key)
 
-        #if articles is None:
-        articles = obj.article_set.active().order_by('-publish_date')
-        #cache.set(key, articles)
+        if articles is None:
+            articles = list(obj.article_set.active().order_by('-publish_date'))
+            cache.set(key, articles, FEED_TIMEOUT)
 
         return articles
 

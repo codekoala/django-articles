@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% load article_tags i18n %}
 
+{% block extra-head %}
+<link rel="alternate" type="application/rss+xml" title="Latest Blog Articles RSS Feed" href="{% url articles_feed 'latest' %}" />
+{% endblock %}
+
 {% block content %}
 <div id="article-archives">
     <h2 class="title">{% trans 'Article Archives' %}</h2>

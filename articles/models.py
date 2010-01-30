@@ -64,6 +64,10 @@ class Tag(models.Model):
     def get_absolute_url(self):
         return ('articles_display_tag', (self.name,))
 
+    @property
+    def rss_name(self):
+        return u'tags/%s' % self.name
+
     class Meta:
         ordering = ('name',)
 

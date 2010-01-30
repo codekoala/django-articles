@@ -21,7 +21,7 @@ class ArticleAdminForm(forms.ModelForm):
     def clean_tags(self):
         """Turns the string of tags into a list"""
 
-        tags = [Tag.objects.get_or_create(name=t.strip())[0] for t in self.cleaned_data['tags'].split()]
+        tags = [Tag.objects.get_or_create(name__iexact=t.strip())[0] for t in self.cleaned_data['tags'].split()]
         self.cleaned_data['tags'] = tags
         return self.cleaned_data['tags']
 

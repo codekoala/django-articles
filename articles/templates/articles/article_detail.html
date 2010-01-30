@@ -4,6 +4,11 @@
 {% block title %}{% trans article.title %}{% endblock %}
 {% block meta-keywords %}{{ article.keywords|escape }}{% endblock %}
 {% block meta-description %}{{ article.description|escape }}{% endblock %}
+{% block extra-head %}
+{{ block.super }}
+{% for tag in article.tags.all %}
+<link rel="alternate" type="application/rss+xml" title="Blog Articles Tagged '{{ tag.name }}' RSS Feed" href="{% url articles_tag_feed tag.name %}" />{% endfor %}
+{% endblock %}
 
 {% block content %}
 
