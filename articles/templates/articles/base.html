@@ -2,6 +2,7 @@
 {% load article_tags i18n %}
 
 {% block extra-head %}
+{{ block.super }}
 <link rel="alternate" type="application/rss+xml" title="Latest Blog Articles RSS Feed" href="{% url articles_feed 'latest' %}" />
 {% endblock %}
 
