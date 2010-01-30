@@ -1,7 +1,8 @@
 from django.contrib.syndication.feeds import Feed
+from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
-from articles.models import Article
+from articles.models import Article, Tag
 
 SITE = Site.objects.get_current()
 
@@ -13,7 +14,14 @@ class LatestEntries(Feed):
         return reverse('articles_archive')
 
     def items(self):
-        return Article.objects.active().order_by('-publish_date')[:5]
+        key = 'latest_articles'
+        articles = cache.get(key)
+
+        if articles is None:
+            articles = Article.objects.active().order_by('-publish_date')[:15]
+            cache.set(key, articles)
+
+        return articles
 
     def item_author_name(self, item):
         return item.author.username
@@ -28,10 +36,11 @@ class TagFeed(Feed):
     def get_object(self, bits):
         if len(bits) != 1:
             raise FeedDoesNotExist
-        return Tag.objects.active().get(slug__exact=bits[0])
+
+        return Tag.objects.get(name__exact=bits[0])
 
     def title(self, obj):
-        return "%s: Newest Articles Tagged '%s'" % (SITE.name, obj.slug)
+        return "%s: Newest Articles Tagged '%s'" % (SITE.name, obj.name)
 
     def link(self, obj):
         if not obj:
@@ -39,13 +48,20 @@ class TagFeed(Feed):
         return obj.get_absolute_url()
 
     def description(self, obj):
-        return "Articles Tagged '%s'" % obj.slug
+        return "Articles Tagged '%s'" % obj.name
 
     def items(self, obj):
         return self.item_set(obj)[:10]
 
     def item_set(self, obj):
-        return obj.article_set.active().order_by('-publish_date')
+        key = 'articles_for_%s' % obj.name
+        #articles = cache.get(key)
+
+        #if articles is None:
+        articles = obj.article_set.active().order_by('-publish_date')
+        #cache.set(key, articles)
+
+        return articles
 
     def item_author_name(self, item):
         return item.author.username
