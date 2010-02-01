@@ -17,14 +17,8 @@ def display_blog_page(request, tag=None, username=None, year=None, month=None, p
     Yes, it's dirty to have so many URLs go to one view, but I'd rather do that
     than duplicate a bunch of code.  I'll probably revisit this in the future.
     """
+
     context = {}
-    key = 'blog_page_%s_%s_%s_%s_%s' % (tag, username, year, month, page)
-    response = cache.get(key)
-
-    # return cached response
-    if response is not None:
-        return response
-
     if tag:
         tag = get_object_or_404(Tag, name__iexact=tag)
         articles = tag.article_set.active()
@@ -63,19 +57,11 @@ def display_blog_page(request, tag=None, username=None, year=None, month=None, p
                     'page_obj': page})
     variables = RequestContext(request, context)
     response = render_to_response(template, variables)
-    cache.set(key, response)
 
     return response
 
 def display_article(request, year, slug, template='articles/article_detail.html'):
     """Displays a single article."""
-
-    key = 'display_article_%s_%s' % (year, slug)
-    response = cache.get(key)
-
-    # return cached response
-    if response is not None:
-        return response
 
     try:
         article = Article.objects.active().get(publish_date__year=year, slug=slug)
@@ -91,7 +77,6 @@ def display_article(request, year, slug, template='articles/article_detail.html'
         'disqus_forum': getattr(settings, 'DISQUS_FORUM_SHORTNAME', None),
     })
     response = render_to_response(template, variables)
-    cache.set(key, response)
 
     return response
 
