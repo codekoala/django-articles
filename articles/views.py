@@ -6,13 +6,11 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponsePermanentRedirect, Http404, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-from django.views.decorators.cache import cache_page
 from articles.models import Article, Tag
 from datetime import datetime
 
 ARTICLE_PAGINATION = getattr(settings, 'ARTICLE_PAGINATION', 20)
 
-@cache_page
 def display_blog_page(request, tag=None, username=None, year=None, month=None, page=1):
     """
     Handles all of the magic behind the pages that list articles in any way.
@@ -20,6 +18,12 @@ def display_blog_page(request, tag=None, username=None, year=None, month=None, p
     than duplicate a bunch of code.  I'll probably revisit this in the future.
     """
     context = {}
+    key = 'blog_page_%s_%s_%s_%s_%s' % (tag, username, year, month, page)
+    response = cache.get(key)
+
+    # return cached response
+    if response is not None:
+        return response
 
     if tag:
         tag = get_object_or_404(Tag, name__iexact=tag)
@@ -58,12 +62,20 @@ def display_blog_page(request, tag=None, username=None, year=None, month=None, p
     context.update({'paginator': paginator,
                     'page_obj': page})
     variables = RequestContext(request, context)
+    response = render_to_response(template, variables)
+    cache.set(key, response)
 
-    return render_to_response(template, variables)
+    return response
 
-@cache_page
 def display_article(request, year, slug, template='articles/article_detail.html'):
     """Displays a single article."""
+
+    key = 'display_article_%s_%s' % (year, slug)
+    response = cache.get(key)
+
+    # return cached response
+    if response is not None:
+        return response
 
     try:
         article = Article.objects.active().get(publish_date__year=year, slug=slug)
@@ -78,7 +90,10 @@ def display_article(request, year, slug, template='articles/article_detail.html'
         'article': article,
         'disqus_forum': getattr(settings, 'DISQUS_FORUM_SHORTNAME', None),
     })
-    return render_to_response(template, variables)
+    response = render_to_response(template, variables)
+    cache.set(key, response)
+
+    return response
 
 def redirect_to_article(request, year, month, day, slug):
     # this is a little snippet to handle URLs that are formatted the old way.
@@ -93,10 +108,12 @@ def ajax_tag_autocomplete(request):
         key = 'ajax_tag_auto_%s' % q
         response = cache.get(key)
 
-        if response is None:
-            tags = list(Tag.objects.filter(name__istartswith=q)[:10])
-            response = HttpResponse(u'\n'.join(tag.name for tag in tags))
-            cache.set(key, response, 300)
+        if response is not None:
+            return response
+
+        tags = list(Tag.objects.filter(name__istartswith=q)[:10])
+        response = HttpResponse(u'\n'.join(tag.name for tag in tags))
+        cache.set(key, response, 300)
 
         return response
 
