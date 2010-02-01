@@ -277,7 +277,7 @@ def tag_cloud():
         MAX_WEIGHT = 5
         tags = Tag.objects.all()
 
-        if len(tags):
+        if len(tags) == 0:
             # go no further
             return {}
 
