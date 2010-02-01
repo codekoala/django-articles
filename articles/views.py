@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.core.paginator import Paginator, EmptyPage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponsePermanentRedirect, Http404, HttpResponseRedirect, HttpResponse
@@ -85,8 +86,16 @@ def ajax_tag_autocomplete(request):
     """Offers a list of existing tags that match the specified query"""
 
     if 'q' in request.GET:
-        tags = Tag.objects.filter(name__istartswith=request.GET['q'])[:10]
-        return HttpResponse(u'\n'.join(tag.name for tag in tags))
+        q = request.GET['q']
+        key = 'ajax_tag_auto_%s' % q
+        response = cache.get(key)
+
+        if response is None:
+            tags = list(Tag.objects.filter(name__istartswith=q)[:10])
+            response = HttpResponse(u'\n'.join(tag.name for tag in tags))
+            cache.set(key, response, 300)
+
+        return response
 
     return HttpResponse()
 

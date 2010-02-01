@@ -33,7 +33,7 @@ DEFAULT_ADDTHIS_USER = getattr(settings, 'DEFAULT_ADDTHIS_USER', None)
 # regex used to find links in an article
 LINK_RE = re.compile('<a.*?href="(.*?)".*?>(.*?)</a>', re.I|re.M)
 TITLE_RE = re.compile('<title>(.*?)</title>', re.I|re.M)
-TAG_RE = re.compile('[^a-z0-9\-_\+\@\$\%\^\*\(\)\{\}\[\]\:\'\<\>,=\.\|\\\]?', re.I)
+TAG_RE = re.compile('[^a-z0-9\-_\+\:\.]?', re.I)
 
 def get_name(user):
     """
@@ -52,12 +52,18 @@ class Tag(models.Model):
     def __unicode__(self):
         return self.name
 
+    @staticmethod
+    def clean(name):
+        """Replace spaces with dashes, in case someone adds such a tag manually"""
+
+        name = name.replace(' ', '-')
+        name = TAG_RE.sub('', name)
+        return name.lower().strip()
+
     def save(self, *args, **kwargs):
         """Cleans up any characters I don't want in a URL"""
 
-        # replace spaces with dashes, in case someone adds such a tag manually
-        self.name = self.name.replace(' ', '-')
-        self.name = TAG_RE.sub('', self.name)
+        self.name = Tag.clean(self.name)
         super(Tag, self).save(*args, **kwargs)
 
     @models.permalink
