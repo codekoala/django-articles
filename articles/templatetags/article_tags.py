@@ -273,9 +273,13 @@ def tag_cloud():
 
     cache_key = 'tag_cloud_tags'
     tags = cache.get(cache_key)
-    if tags == None:
+    if tags is None:
         MAX_WEIGHT = 5
         tags = Tag.objects.all()
+
+        if len(tags):
+            # go no further
+            return {}
 
         min_count = max_count = tags[0].article_set.count()
         for tag in tags:

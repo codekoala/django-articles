@@ -6,11 +6,13 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponsePermanentRedirect, Http404, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
+from django.views.decorators.cache import cache_page
 from articles.models import Article, Tag
 from datetime import datetime
 
 ARTICLE_PAGINATION = getattr(settings, 'ARTICLE_PAGINATION', 20)
 
+@cache_page
 def display_blog_page(request, tag=None, username=None, year=None, month=None, page=1):
     """
     Handles all of the magic behind the pages that list articles in any way.
@@ -59,6 +61,7 @@ def display_blog_page(request, tag=None, username=None, year=None, month=None, p
 
     return render_to_response(template, variables)
 
+@cache_page
 def display_article(request, year, slug, template='articles/article_detail.html'):
     """Displays a single article."""
 
