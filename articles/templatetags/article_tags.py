@@ -274,7 +274,7 @@ def tag_cloud():
     cache_key = 'tag_cloud_tags'
     tags = cache.get(cache_key)
     if tags is None:
-        MAX_WEIGHT = 5
+        MAX_WEIGHT = 7
         tags = Tag.objects.all()
 
         if len(tags) == 0:
