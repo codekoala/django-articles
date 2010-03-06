@@ -21,7 +21,7 @@ def display_blog_page(request, tag=None, username=None, year=None, month=None, p
     context = {}
     if tag:
         tag = get_object_or_404(Tag, name__iexact=tag)
-        articles = tag.article_set.active()
+        articles = tag.article_set.active().select_related()
         template = 'articles/display_tag.html'
         context['tag'] = tag
 
@@ -36,7 +36,7 @@ def display_blog_page(request, tag=None, username=None, year=None, month=None, p
         # listing articles in a given month and year
         year = int(year)
         month = int(month)
-        articles = Article.objects.active().filter(publish_date__year=year, publish_date__month=month)
+        articles = Article.objects.active().select_related().filter(publish_date__year=year, publish_date__month=month)
         template = 'articles/in_month.html'
         context['month'] = datetime(year, month, 1)
 

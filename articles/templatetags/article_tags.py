@@ -1,6 +1,7 @@
 from django import template
 from django.core.cache import cache
 from django.core.urlresolvers import resolve, reverse, Resolver404
+from django.db.models import Count
 from articles.models import Article, Tag
 from datetime import datetime
 import math
@@ -62,7 +63,7 @@ class GetArticlesNode(template.Node):
             order = 'publish_date'
 
         # get the active articles in the appropriate order
-        articles = Article.objects.active().order_by(order)
+        articles = Article.objects.active().order_by(order).select_related()
 
         if self.count:
             # if we have a number of articles to retrieve, pull the first of them
@@ -118,7 +119,7 @@ class GetArticleArchivesNode(template.Node):
             archives = {}
 
             # iterate over all active articles
-            for article in Article.objects.active():
+            for article in Article.objects.active().select_related():
                 pub = article.publish_date
 
                 # see if we already have an article in this year
@@ -275,7 +276,7 @@ def tag_cloud():
     tags = cache.get(cache_key)
     if tags is None:
         MAX_WEIGHT = 7
-        tags = Tag.objects.all()
+        tags = Tag.objects.annotate(count=Count('article'))
 
         if len(tags) == 0:
             # go no further
@@ -283,7 +284,6 @@ def tag_cloud():
 
         min_count = max_count = tags[0].article_set.count()
         for tag in tags:
-            tag.count = tag.article_set.count()
             if tag.count < min_count:
                 min_count = tag.count
             if max_count < tag.count:
