@@ -40,10 +40,16 @@ def get_name(user):
     Provides a way to fall back to a user's username if their full name has not
     been entered.
     """
-    if len(user.get_full_name().strip()):
-        return user.get_full_name()
-    else:
-        return user.username
+    key = 'username_for_%s' % user.id
+    name = cache.get(key)
+    if not name:
+        if len(user.get_full_name().strip()):
+            name = user.get_full_name()
+        else:
+            name = user.username
+        cache.set(key, name, 86400)
+
+    return name
 User.get_name = get_name
 
 class Tag(models.Model):
