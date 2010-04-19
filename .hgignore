@@ -3,5 +3,6 @@ syntax: glob
 *.swp
 *.swo
 dist/
+django_articles.egg-info
 MANIFEST
 

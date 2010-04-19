@@ -1,4 +1,4 @@
-__version__ = '1.8a'
+__version__ = '1.8.1a'
 
 """
 The Pygments reStructuredText directive
