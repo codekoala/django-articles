@@ -77,9 +77,7 @@ Tag Auto-Completion
 
 If you would like to take advantage of the auto-completion feature for tags, copy the files from the ``articles/media`` directories into your static media directory.  ``django-articles`` expects to find each of those directories/files in your ``settings.MEDIA_URL`` directory--if this does not suit your needs, you may override the ``Media`` class of ``articles.forms.ArticleAdminForm`` with the appropriate paths.
 
-Another assumption that is made by this feature is that the prefix you assign to your ``django-articles`` installation in your ``ROOT_URLCONF`` will be ``^blog/``.  For example:
-
- .. code-block:: python
+Another assumption that is made by this feature is that the prefix you assign to your ``django-articles`` installation in your ``ROOT_URLCONF`` will be ``^blog/``.  For example::
 
     url(r'^blog', include('articles.urls')),
 
