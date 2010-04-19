@@ -49,23 +49,21 @@ Use one of the following commands::
 Configuration
 =============
 
-First of all, you must add this project to your list of ``INSTALLED_APPS`` in ``settings.py``:
+First of all, you must add this project to your list of ``INSTALLED_APPS`` in ``settings.py``::
 
-{{{
-INSTALLED_APPS = (
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.humanize',
-    'django.contrib.markup',
-    'django.contrib.sessions',
-    'django.contrib.sites',
-    'django.contrib.syndication',
-    ...
-    'articles',
-    ...
-)
-}}}
+    INSTALLED_APPS = (
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.humanize',
+        'django.contrib.markup',
+        'django.contrib.sessions',
+        'django.contrib.sites',
+        'django.contrib.syndication',
+        ...
+        'articles',
+        ...
+    )
 
 Run ``manage.py syncdb``.  This creates a few tables in your database that are necessary for operation.
 
