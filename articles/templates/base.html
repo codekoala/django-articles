@@ -1,0 +1,40 @@
+{% load article_tags %}
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="language" content="en-US" />
+<meta name="keywords" content="{% block meta-keywords %}{% endblock %}" />
+<meta name="description" content="{% block meta-description %}{% endblock %}" />
+
+<title>My Site - {% block title %}Welcome{% endblock %}</title>
+{% block extra-head %}{% endblock %}
+</head>
+<body>
+<h1>My Site</h1>
+{% block content %}{% endblock %}
+{% block sidebar %}
+    {% block recent_articles %}
+    <li>
+        <h2>Recent Articles</h2>
+        {% get_articles 10 as recent %}
+        {% for article in recent %}
+        {% if forloop.first %}<ul>{% endif %}
+            <li><a href="{{ article.get_absolute_url }}" title="Read this article">{{ article.title }}</a></li>
+        {% if forloop.last %}</ul>{% endif %}
+        {% endfor %}
+    </li>
+    {% endblock %}
+
+    {% block article_tags %}
+    <li>
+        <h2>Tag Cloud</h2>
+        {% tag_cloud %}
+    </li>
+    {% endblock %}
+{% endblock %}
+
+{% block footer %}
+<p>Copyright &copy; {% now "Y" %} Me. All rights reserved.</p>
+{% endblock %}
+</body>
+</html>

@@ -72,6 +72,18 @@ Next, set a couple of settings in your ``settings.py``:
  * ``DISQUS_USER_API_KEY``: Your user API key from Disqus.  This is free, and you can learn how to get it from  `Disqus's API Page <http://2ze.us/ME>`_ or you can try http://disqus.com/api/get_my_key/ when you're logged into Disqus.  You only need this one if you're going to be converting comments from ``django.contrib.comments`` to Disqus.
  * ``DISQUS_FORUM_SHORTNAME``: set this to ``True`` if you want to see markers on the map
 
+Template Integration
+====================
+
+There are several template blocks that ``django-articles`` expects your ``base.html`` file to contain:
+
+* ``title``
+* ``meta-keywords``
+* ``meta-description``
+* ``extra-head``
+* ``content``
+* ``footer``
+
 Tag Auto-Completion
 ===================
 
