@@ -59,7 +59,7 @@ class Tag(models.Model):
         return self.name
 
     @staticmethod
-    def clean(name):
+    def clean_tag(name):
         """Replace spaces with dashes, in case someone adds such a tag manually"""
 
         name = name.replace(' ', '-')
@@ -69,7 +69,7 @@ class Tag(models.Model):
     def save(self, *args, **kwargs):
         """Cleans up any characters I don't want in a URL"""
 
-        self.name = Tag.clean(self.name)
+        self.name = Tag.clean_tag(self.name)
         super(Tag, self).save(*args, **kwargs)
 
     @models.permalink
