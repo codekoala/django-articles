@@ -97,11 +97,11 @@ class IMAPHandler(MailboxHandler):
         """Deletes a message from the server"""
 
         self.handle.store(msg_id, '+FLAGS', '\\Deleted')
-        self.handle.expunge()
 
     def disconnect(self):
         """Closes the IMAP4 handle"""
 
+        self.handle.expunge()
         self.handle.close()
         self.handle.logout()
 
