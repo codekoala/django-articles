@@ -1,4 +1,4 @@
-__version__ = '1.9.1-pre'
+__version__ = '1.9.2-pre'
 
 """
 The Pygments reStructuredText directive
