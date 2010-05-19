@@ -144,7 +144,7 @@ class POPHandler(MailboxHandler):
     def disconnect(self):
         """Closes the POP3 handle"""
 
-        handle.quit()
+        self.handle.quit()
 
 class Command(BaseCommand):
     help = "Checks special e-mail inboxes for emails that should be posted as articles"
