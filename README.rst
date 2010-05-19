@@ -97,5 +97,56 @@ If this does not match your installation, all you need to change is the ``js/tag
 
 When that's done, you should be able to begin using ``django-articles``!
 
+Articles From Email
+===================
+
+.. versionadded:: 0.9.1
+   Articles from email
+
+I've been working on making it possible for ``django-articles`` to post articles that you email to a special mailbox.  This seems to be working on the most basic levels right now.  It's not been tested in very many scenarios, and I would appreciate it if you could post problems with it in the ticket tracker at http://bitbucket.org/codekoala/django-articles/ so we can make it work really well.
+
+Things to keep in mind:
+
+* Any **active** user who is a ``django.contrib.auth.models.User`` and has an email address associated with their user information is a valid sender for articles from email.  This is how the author of an article is determined.
+* Only the following fields are currently populated by the articles from email feature:
+
+    * author
+    * title
+    * slug (uniqueness is handled)
+    * content
+    * markup
+    * publish_date
+    * is_active
+
+  Any and all other attributes about an article must be configured later on using the standard mechanisms (aka the Django admin).
+* There is a new management command to handle all of the magic for this feature: ``check_for_articles_from_email``.  This command is intended to be called either manually or via external scheduling utilities (like ``cron``)
+* Email messages **are deleted** after they are turned into articles.  This means that you should probably have a *special mailbox dedicated to django-article and articles from email*.  However, only emails whose sender matches the email address of an active user are deleted (as described above).
+* Attachments are currently not bothered with.  Don't worry, they will be :D
+
+Configuration
+-------------
+
+There are several new variables that you can configure in your ``settings.py`` to enable articles from email:
+
+* ``ARTICLES_EMAIL_PROTOCOL`` - Either ``IMAP4`` or ``POP3``.  *Default*: ``IMAP4``
+* ``ARTICLES_EMAIL_HOST`` - The mail server. *Example*: mail.yourserver.com
+* ``ARTICLES_EMAIL_PORT`` - The port to use to connect to your mail server
+* ``ARTICLES_EMAIL_KEYFILE`` - The keyfile used to access your mail server *untested*
+* ``ARTICLES_EMAIL_CERTFILE`` - The certfile used to access your mail server *untested*
+* ``ARTICLES_EMAIL_USER`` - The username used to access your mailbox
+* ``ARTICLES_EMAIL_PASSWORD`` - The password associated with the user to access your mailbox
+* ``ARTICLES_EMAIL_SSL`` - Whether or not to connect to the mail server using SSL.  *Default*: ``False``
+* ``ARTICLES_EMAIL_AUTOPOST`` - Whether or not to automatically post articles that are created from email messages.  If this is ``False``, the articles will be marked as inactive and you must manually make them active. *Default*: ``False``
+* ``ARTICLES_EMAIL_MARKUP`` - The default markup language to use for articles from email.  Options include:
+
+    * ``h`` for HTML/plain text
+    * ``m`` for Markdown
+    * ``r`` for reStructuredText
+    * ``t`` for Textile
+
+  *Default*: ``h``
+
+* ``ARTICLES_EMAIL_ACK`` - Whether or not to email out an acknowledgment message when articles are created from email.  *Default*: ``False``
+
 Good luck!  Please contact me with any questions or concerns you have with the project!
 
