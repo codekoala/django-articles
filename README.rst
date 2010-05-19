@@ -142,8 +142,8 @@ Things to keep in mind:
 
 * Any **active** user who is a ``django.contrib.auth.models.User`` and has an
   email address associated with their user information is a valid sender for
-  articles from email.  This is how the author of an article is determined.  *
-  Only the following fields are currently populated by the articles from email
+  articles from email.  This is how the author of an article is determined.
+* Only the following fields are currently populated by the articles from email
   feature:
 
     * author
