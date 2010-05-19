@@ -126,8 +126,9 @@ When that's done, you should be able to begin using ``django-articles``!
 Articles From Email
 ===================
 
-.. versionadded:: 0.9.1
-   Articles from email
+.. admonition:: Added In 1.9.2
+
+    The articles from email feature was added in version **1.9.2**
 
 I've been working on making it possible for ``django-articles`` to post
 articles that you email to a special mailbox.  This seems to be working on the
@@ -139,10 +140,10 @@ really well.
 Things to keep in mind:
 
 * Any **active** user who is a ``django.contrib.auth.models.User`` and has an
-email address associated with their user information is a valid sender for
-articles from email.  This is how the author of an article is determined.  *
-Only the following fields are currently populated by the articles from email
-feature:
+  email address associated with their user information is a valid sender for
+  articles from email.  This is how the author of an article is determined.  *
+  Only the following fields are currently populated by the articles from email
+  feature:
 
     * author
     * title
