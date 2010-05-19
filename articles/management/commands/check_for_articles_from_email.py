@@ -58,9 +58,15 @@ class Command(BaseCommand):
         # try to guess if we don't have a port
         if port is None:
             if protocol == MB_IMAP4:
-                port = 993 if ssl else 143
+                if ssl:
+                    port = 993
+                else:
+                    port = 143
             elif protocol == MB_POP3:
-                port = 995 if ssl else 110
+                if ssl:
+                    port = 995
+                else:
+                    port = 110
 
         handle = None
         try:
