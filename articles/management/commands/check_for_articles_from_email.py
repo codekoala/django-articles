@@ -40,17 +40,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Main entry point for the command"""
 
-        s = lambda k, d: getattr(settings, k, d)
-
         # retrieve configuration options--give precedence to CLI parameters
-        protocol = options['protocol'] or s('ARTICLES_EMAIL_PROTOCOL', MB_IMAP4)
-        host = options['host'] or s('ARTICLES_EMAIL_HOST', 'mail.yourhost.com')
-        port = options['port'] or s('ARTICLES_EMAIL_PORT', None)
-        keyfile = options['keyfile'] or s('ARTICLES_EMAIL_KEYFILE', None)
-        certfile = options['certfile'] or s('ARTICLES_EMAIL_CERTFILE', None)
-        username = options['username'] or s('ARTICLES_EMAIL_USER', None)
-        password = options['password'] or s('ARTICLES_EMAIL_PASSWORD', None)
-        ssl = options['ssl'] or s('ARTICLES_EMAIL_SSL', False)
+        self.from_email = getattr(settings, 'ARTICLES_FROM_EMAIL', {})
+        s = lambda k, d: self.from_email.get(k, d)
+
+        protocol = options['protocol'] or s('protocol', MB_IMAP4)
+        host = options['host'] or s('host', 'mail.yourhost.com')
+        port = options['port'] or s('port', None)
+        keyfile = options['keyfile'] or s('keyfile', None)
+        certfile = options['certfile'] or s('certfile', None)
+        username = options['username'] or s('user', None)
+        password = options['password'] or s('password', None)
+        ssl = options['ssl'] or s('ssl', False)
 
         self.verbosity = int(options.get('verbosity', 1))
 
@@ -246,8 +247,9 @@ class Command(BaseCommand):
         site = Site.objects.get_current()
 
         # make sure we have a valid default markup
-        ack = getattr(settings, 'ARTICLES_EMAIL_ACK', False)
-        markup = getattr(settings, 'ARTICLES_EMAIL_MARKUP', MARKUP_HTML)
+        ack = self.from_email.get('acknowledge', False)
+        autopost = self.from_email.get('autopost', False)
+        markup = self.from_email.get('markup', MARKUP_HTML)
         if markup not in (MARKUP_HTML, MARKUP_MARKDOWN, MARKUP_REST, MARKUP_TEXTILE):
             markup = MARKUP_HTML
 
@@ -267,8 +269,6 @@ class Command(BaseCommand):
             slug = self.get_unique_slug(slugify(title))
 
             content = self.get_email_content(email)
-            autopost = getattr(settings, 'ARTICLES_EMAIL_AUTOPOST', False)
-
             try:
                 # try to grab the timestamp from the email message
                 publish_date = datetime.fromtimestamp(time.mktime(parsedate(email['Date'])))
