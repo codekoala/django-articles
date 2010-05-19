@@ -128,7 +128,8 @@ Articles From Email
 
 .. admonition:: Added In 1.9.2
 
-    The articles from email feature was added in version **1.9.2**
+    The articles from email feature was added in version **1.9.2**.  It
+    requires Python 2.4 or greater.
 
 I've been working on making it possible for ``django-articles`` to post
 articles that you email to a special mailbox.  This seems to be working on the
