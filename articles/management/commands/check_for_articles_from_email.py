@@ -19,6 +19,133 @@ from articles.models import Article, MARKUP_HTML, MARKUP_MARKDOWN, MARKUP_REST, 
 MB_IMAP4 = 'IMAP4'
 MB_POP3 = 'POP3'
 
+class MailboxHandler(object):
+    def __init__(self, host, port, username, password, keyfile, certfile, ssl):
+        self.host = host
+        self.port = port
+        self.username = username
+        self.password = password
+        self.keyfile = keyfile
+        self.certfile = certfile
+        self.ssl = ssl
+        self._handle = None
+
+    @property
+    def handle(self):
+        if not self._handle:
+            self._handle = self.connect()
+
+        return self._handle
+
+    def parse_email(self, message):
+        """Parses each email message"""
+
+        fp = FeedParser()
+        fp.feed(message)
+        return fp.close()
+
+    def connect(self):
+        raise NotImplemented
+
+    def fetch(self):
+        raise NotImplemented
+
+    def delete_messages(self, id_list):
+        """Deletes a list of messages from the server"""
+
+        for msg_id in id_list:
+            self.delete_message(msg_id)
+
+    def delete_message(self, msg_id):
+        raise NotImplemented
+
+    def disconnect(self):
+        raise NotImplemented
+
+class IMAPHandler(MailboxHandler):
+
+    def connect(self):
+        """Connects to and authenticates with an IMAP4 mail server"""
+
+        import imaplib
+
+        try:
+            if (self.keyfile and self.certfile) or self.ssl:
+                M = imaplib.IMAP4_SSL(self.host, self.port, self.keyfile, self.certfile)
+            else:
+                M = imaplib.IMAP4(self.host, self.port)
+        except socket.error, err:
+            raise
+        else:
+            M.login(self.username, self.password)
+            M.select()
+            return M
+
+    def fetch(self):
+        """Fetches email messages from an IMAP4 server"""
+
+        messages = {}
+
+        typ, data = self.handle.search(None, 'ALL')
+        for num in data[0].split():
+            typ, data = self.handle.fetch(num, '(RFC822)')
+            messages[num] = self.parse_email(data[0][1])
+
+        return messages
+
+    def delete_message(self, msg_id):
+        """Deletes a message from the server"""
+
+        self.handle.store(msg_id, '+FLAGS', '\\Deleted')
+        self.handle.expunge()
+
+    def disconnect(self):
+        """Closes the IMAP4 handle"""
+
+        self.handle.close()
+        self.handle.logout()
+
+class POPHandler(MailboxHandler):
+
+    def connect(self):
+        """Connects to and authenticates with a POP3 mail server"""
+
+        import poplib
+
+        try:
+            if (self.keyfile and self.certfile) or self.ssl:
+                M = poplib.POP3_SSL(self.host, self.port, self.keyfile, self.certfile)
+            else:
+                M = poplib.POP3(self.host, self.port)
+        except socket.error, err:
+            raise
+        else:
+            M.user(self.username)
+            M.pass_(self.password)
+            return M
+
+    def fetch(self):
+        """Fetches email messages from a POP3 server"""
+
+        messages = {}
+
+        num = len(self.handle.list()[1])
+        for i in range(num):
+            message = '\n'.join([msg for msg in self.handle.retr(i + 1)[1]])
+            messages[num] = self.parse_email(message)
+
+        return messages
+
+    def delete_message(self, msg_id):
+        """Deletes a message from the server"""
+
+        self.handle.dele(msg_id)
+
+    def disconnect(self):
+        """Closes the POP3 handle"""
+
+        handle.quit()
+
 class Command(BaseCommand):
     help = "Checks special e-mail inboxes for emails that should be posted as articles"
 
@@ -71,19 +198,17 @@ class Command(BaseCommand):
         handle = None
         try:
             handle = self.get_mail_handle(protocol, host, port, username, password, keyfile, certfile, ssl)
-            messages = self.fetch_messages(protocol, handle)
+
+            self.log('Fetching messages')
+            messages = handle.fetch()
+
             created = self.create_articles(messages)
-            self.delete_messages(protocol, handle, created)
+
+            self.log('Deleting consumed messages')
+            handle.delete_messages(created)
         finally:
             if handle:
-                if protocol == MB_IMAP4:
-                    # close the IMAP4 handle
-                    handle.close()
-                    handle.logout()
-
-                elif protocol == MB_POP3:
-                    # close the POP3 handle
-                    handle.quit()
+                handle.disconnect()
 
     def get_mail_handle(self, protocol, *args, **kwargs):
         """
@@ -94,127 +219,13 @@ class Command(BaseCommand):
         self.log('Creating handle to mail server')
 
         if protocol == MB_IMAP4:
-            return self.get_imap4_handle(*args, **kwargs)
+            self.log('Creating IMAP4 handle')
+            return IMAPHandler(*args, **kwargs)
         else:
-            return self.get_pop3_handle(*args, **kwargs)
+            self.log('Creating POP3 handle')
+            return POPHandler(*args, **kwargs)
 
         return None
-
-    def get_imap4_handle(self, host, port, username, password, keyfile, certfile, ssl):
-        """Connects to and authenticates with an IMAP4 mail server"""
-
-        import imaplib
-
-        try:
-            if (keyfile and certfile) or ssl:
-                self.log('Creating SSL IMAP4 handle')
-                M = imaplib.IMAP4_SSL(host, port, keyfile, certfile)
-            else:
-                self.log('Creating non-SSL IMAP4 handle')
-                M = imaplib.IMAP4(host, port)
-        except socket.error, err:
-            raise
-        else:
-            self.log('Authenticating with mail server')
-            M.login(username, password)
-            M.select()
-            return M
-
-    def get_pop3_handle(self, host, port, username, password, keyfile, certfile, ssl):
-        """Connects to and authenticates with a POP3 mail server"""
-
-        import poplib
-
-        try:
-            if (keyfile and certfile) or ssl:
-                self.log('Creating SSL POP3 handle')
-                M = poplib.POP3_SSL(host, port, keyfile, certfile)
-            else:
-                self.log('Creating non-SSL POP3 handle')
-                M = poplib.POP3(host, port)
-        except socket.error, err:
-            raise
-        else:
-            self.log('Authenticating with mail server')
-            M.user(username)
-            M.pass_(password)
-            return M
-
-    def fetch_messages(self, protocol, handle):
-        """Fetches email messages from a server pased on the protocol"""
-
-        self.log('Fetching new messages')
-        try:
-            if protocol == MB_IMAP4:
-                messages = self.handle_imap4_fetch(handle)
-            elif protocol == MB_POP3:
-                messages = self.handle_pop3_fetch(handle)
-        except socket.error, err:
-            sys.exit('Error retrieving mail: %s' % (err,))
-        else:
-            parsed = {}
-
-            self.log('Parsing email messages')
-
-            # parse each email message
-            for num, mess in messages.iteritems():
-                fp = FeedParser()
-                fp.feed(mess)
-                parsed[num] = fp.close()
-
-            return parsed
-
-    def delete_messages(self, protocol, handle, created):
-        """Deletes the messages we just created articles for"""
-
-        self.log('Deleting consumed emails: %s' % (created,))
-        try:
-            if protocol == MB_IMAP4:
-                self.handle_imap4_delete(handle, created)
-            elif protocol == MB_POP3:
-                self.handle_pop3_delete(handle, created)
-        except socket.error, err:
-            sys.exit('Error deleting mail: %s' % (err,))
-
-    def handle_imap4_fetch(self, handle):
-        """Fetches messages from an IMAP server"""
-
-        messages = {}
-
-        self.log('Fetching from IMAP4')
-        typ, data = handle.search(None, 'ALL')
-        for num in data[0].split():
-            typ, data = handle.fetch(num, '(RFC822)')
-            messages[num] = data[0][1]
-
-        return messages
-
-    def handle_pop3_fetch(self, handle):
-        """Fetches messages from a POP3 server"""
-
-        messages = {}
-
-        self.log('Fetching from POP3')
-        num = len(handle.list()[1])
-        for i in range(num):
-            messages[num] = '\n'.join([msg for msg in handle.retr(i + 1)[1]])
-
-        return messages
-
-    def handle_imap4_delete(self, handle, created):
-        """Deletes the messages we just posted as articles"""
-
-        self.log('Deleting from IMAP4')
-        for num in created:
-            handle.store(num, '+FLAGS', '\\Deleted')
-
-        handle.expunge()
-
-    def handle_pop3_delete(self, handle, created):
-        """Deletes the messages we just posted as articles"""
-
-        self.log('Deleting from POP3')
-        map(handle.dele, created)
 
     def get_email_content(self, email):
         """Attempts to extract an email's content"""
