@@ -20,6 +20,7 @@ MB_IMAP4 = 'IMAP4'
 MB_POP3 = 'POP3'
 
 class MailboxHandler(object):
+
     def __init__(self, host, port, username, password, keyfile, certfile, ssl):
         self.host = host
         self.port = port
@@ -35,6 +36,14 @@ class MailboxHandler(object):
                 self.port = self.secure_port
             else:
                 self.port = self.unsecure_port
+
+    @property
+    def secure_port(self):
+        return -1
+
+    @property
+    def unsecure_port(self):
+        return -1
 
     @property
     def handle(self):
@@ -214,7 +223,6 @@ class Command(BaseCommand):
 
             self.log('Fetching messages')
             messages = handle.fetch()
-
             created = self.create_articles(messages)
 
             self.log('Deleting consumed messages')
@@ -223,7 +231,11 @@ class Command(BaseCommand):
             self.log('Failed to communicate with mail server.  Please verify your settings.', 0)
         finally:
             if handle:
-                handle.disconnect()
+                try:
+                    handle.disconnect()
+                except socket.error:
+                    # probably means we couldn't connect to begin with
+                    pass
 
     def get_mail_handle(self, protocol, *args, **kwargs):
         """
