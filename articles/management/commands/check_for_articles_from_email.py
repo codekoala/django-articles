@@ -30,6 +30,12 @@ class MailboxHandler(object):
         self.ssl = ssl
         self._handle = None
 
+        if self.port is None:
+            if self.ssl:
+                self.port = self.secure_port
+            else:
+                self.port = self.unsecure_port
+
     @property
     def handle(self):
         if not self._handle:
@@ -63,6 +69,14 @@ class MailboxHandler(object):
         raise NotImplemented
 
 class IMAPHandler(MailboxHandler):
+
+    @property
+    def secure_port(self):
+        return 993
+
+    @property
+    def unsecure_port(self):
+        return 143
 
     def connect(self):
         """Connects to and authenticates with an IMAP4 mail server"""
@@ -108,6 +122,14 @@ class IMAPHandler(MailboxHandler):
         self.handle.logout()
 
 class POPHandler(MailboxHandler):
+
+    @property
+    def secure_port(self):
+        return 995
+
+    @property
+    def unsecure_port(self):
+        return 110
 
     def connect(self):
         """Connects to and authenticates with a POP3 mail server"""
@@ -185,19 +207,6 @@ class Command(BaseCommand):
         ssl = options['ssl'] or s('ssl', False)
 
         self.verbosity = int(options.get('verbosity', 1))
-
-        # try to guess if we don't have a port
-        if port is None:
-            if protocol == MB_IMAP4:
-                if ssl:
-                    port = 993
-                else:
-                    port = 143
-            elif protocol == MB_POP3:
-                if ssl:
-                    port = 995
-                else:
-                    port = 110
 
         handle = None
         try:
