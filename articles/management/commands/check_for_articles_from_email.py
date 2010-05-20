@@ -69,16 +69,18 @@ class IMAPHandler(MailboxHandler):
 
         import imaplib
 
+        M = None
         try:
             if (self.keyfile and self.certfile) or self.ssl:
                 M = imaplib.IMAP4_SSL(self.host, self.port, self.keyfile, self.certfile)
             else:
                 M = imaplib.IMAP4(self.host, self.port)
+
+            M.login(self.username, self.password)
+            M.select()
         except socket.error, err:
             raise
         else:
-            M.login(self.username, self.password)
-            M.select()
             return M
 
     def fetch(self):
@@ -112,16 +114,18 @@ class POPHandler(MailboxHandler):
 
         import poplib
 
+        M = None
         try:
             if (self.keyfile and self.certfile) or self.ssl:
                 M = poplib.POP3_SSL(self.host, self.port, self.keyfile, self.certfile)
             else:
                 M = poplib.POP3(self.host, self.port)
+
+            M.user(self.username)
+            M.pass_(self.password)
         except socket.error, err:
             raise
         else:
-            M.user(self.username)
-            M.pass_(self.password)
             return M
 
     def fetch(self):
@@ -206,6 +210,8 @@ class Command(BaseCommand):
 
             self.log('Deleting consumed messages')
             handle.delete_messages(created)
+        except socket.error:
+            self.log('Failed to communicate with mail server.  Please verify your settings.', 0)
         finally:
             if handle:
                 handle.disconnect()
