@@ -203,8 +203,8 @@ class Command(BaseCommand):
         """Main entry point for the command"""
 
         # retrieve configuration options--give precedence to CLI parameters
-        self.from_email = getattr(settings, 'ARTICLES_FROM_EMAIL', {})
-        s = lambda k, d: self.from_email.get(k, d)
+        self.config = getattr(settings, 'ARTICLES_FROM_EMAIL', {})
+        s = lambda k, d: self.config.get(k, d)
 
         protocol = options['protocol'] or s('protocol', MB_IMAP4)
         host = options['host'] or s('host', 'mail.yourhost.com')
@@ -291,9 +291,9 @@ class Command(BaseCommand):
         site = Site.objects.get_current()
 
         # make sure we have a valid default markup
-        ack = self.from_email.get('acknowledge', False)
-        autopost = self.from_email.get('autopost', False)
-        markup = self.from_email.get('markup', MARKUP_HTML)
+        ack = self.config.get('acknowledge', False)
+        autopost = self.config.get('autopost', False)
+        markup = self.config.get('markup', MARKUP_HTML)
         if markup not in (MARKUP_HTML, MARKUP_MARKDOWN, MARKUP_REST, MARKUP_TEXTILE):
             markup = MARKUP_HTML
 
