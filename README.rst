@@ -86,8 +86,8 @@ Next, set a couple of settings in your ``settings.py``:
   you can try http://disqus.com/api/get_my_key/ when you're logged into Disqus.
   You only need this one if you're going to be converting comments from
   ``django.contrib.comments`` to Disqus.
-* ``DISQUS_FORUM_SHORTNAME``: set this to ``True`` if you want to see markers
-  on the map
+* ``DISQUS_FORUM_SHORTNAME``: The name of your Disqus site.  This is what's
+  used to link comments to your site.
 
 Template Integration
 ====================
