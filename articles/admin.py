@@ -3,7 +3,12 @@ from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 from forms import ArticleAdminForm
-from models import Tag, Article
+from models import Tag, Article, Attachment
+
+class AttachmentInline(admin.TabularInline):
+    model = Attachment
+    extra = 5
+    max_num = 15
 
 class ArticleAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'publish_date', 'expiration_date', 'is_active')
@@ -12,6 +17,9 @@ class ArticleAdmin(admin.ModelAdmin):
     search_fields = ('title', 'keywords', 'description', 'content')
     date_hierarchy = 'publish_date'
     form = ArticleAdminForm
+    inlines = [
+        AttachmentInline,
+    ]
 
     fieldsets = (
         (None, {'fields': ('title', 'content', 'tags', 'markup')}),

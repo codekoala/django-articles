@@ -333,3 +333,10 @@ class Article(models.Model):
     class Meta:
         ordering = ('-publish_date', 'title')
 
+class Attachment(models.Model):
+    upload_to = lambda inst, fn: 'attach/%s/%s/%s' % (datetime.now().year, inst.article.slug, fn)
+
+    article = models.ForeignKey(Article, related_name='attachments')
+    attachment = models.FileField(upload_to=upload_to)
+    caption = models.CharField(max_length=255, blank=True)
+
