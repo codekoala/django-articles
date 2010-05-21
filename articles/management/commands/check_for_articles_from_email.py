@@ -10,7 +10,6 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
-from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
 
 from articles.models import Article, MARKUP_HTML, MARKUP_MARKDOWN, MARKUP_REST, MARKUP_TEXTILE
@@ -236,7 +235,7 @@ class Command(BaseCommand):
             messages = handle.fetch()
 
             if len(messages):
-                self.log('Fetching messages')
+                self.log('Creating articles')
                 created = self.create_articles(messages)
 
                 if len(created):
@@ -270,26 +269,9 @@ class Command(BaseCommand):
 
         return None
 
-    def get_unique_slug(self, slug):
-        """Iterates until a unique slug is found"""
-
-        orig_slug = slug
-        year = datetime.now().year
-        counter = 1
-
-        while True:
-            not_unique = Article.objects.filter(publish_date__year=year, slug=slug)
-            if len(not_unique) == 0:
-                return slug
-
-            self.log('Found duplicate slug for year %s: %s. Trying again.' % (year, slug))
-            slug = '%s-%s' % (orig_slug, counter)
-            counter += 1
-
     def create_articles(self, emails):
         """Attempts to post new articles based on parsed email messages"""
 
-        self.log('Creating article objects')
         created = []
         site = Site.objects.get_current()
 
@@ -313,7 +295,6 @@ class Command(BaseCommand):
 
             # get the attributes for the article
             title = email.get('Subject', '--- article from email ---')
-            slug = self.get_unique_slug(slugify(title))
 
             content = self.get_email_content(email)
             try:
@@ -327,7 +308,6 @@ class Command(BaseCommand):
             article = Article(
                 author=author,
                 title=title,
-                slug=slug,
                 content=content,
                 markup=markup,
                 publish_date=publish_date,
@@ -336,6 +316,7 @@ class Command(BaseCommand):
 
             try:
                 article.save()
+                self.log('Article created.')
             except StandardError, err:
                 # log it and move on to the next message
                 self.log('Error creating article: %s' % (err,), 0)

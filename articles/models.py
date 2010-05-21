@@ -5,7 +5,7 @@ from django.contrib.markup.templatetags import markup
 from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.conf import settings
-from django.template.defaultfilters import striptags
+from django.template.defaultfilters import slugify, striptags
 from django.utils.translation import ugettext_lazy as _
 from datetime import datetime
 from base64 import encodestring
@@ -174,6 +174,14 @@ class Article(models.Model):
         if self.use_addthis_button and self.addthis_use_author and not self.addthis_username:
             self.addthis_username = self.author.username
 
+        # make sure the slug is always unique for the year this article was posted
+        if not self.id:
+            # make sure we have a slug first
+            if not len(self.slug.strip()):
+                self.slug = slugify(self.title)
+
+            self.slug = self.get_unique_slug(self.slug)
+
         super(Article, self).save(*args, **kwargs)
         requires_save = False
 
@@ -194,6 +202,25 @@ class Article(models.Model):
 
         if requires_save:
             super(Article, self).save(*args, **kwargs)
+
+    def get_unique_slug(self, slug):
+        """Iterates until a unique slug is found"""
+
+        # we need a publish date before we can do anything meaningful
+        if type(self.publish_date) is not datetime:
+            return slug
+
+        orig_slug = slug
+        year = self.publish_date.year
+        counter = 1
+
+        while True:
+            not_unique = Article.objects.filter(publish_date__year=year, slug=slug)
+            if len(not_unique) == 0:
+                return slug
+
+            slug = '%s-%s' % (orig_slug, counter)
+            counter += 1
 
     def _get_article_links(self):
         """
