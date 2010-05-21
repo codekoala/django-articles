@@ -36,6 +36,17 @@ class MailboxHandler(object):
             else:
                 self.port = self.unsecure_port
 
+    @staticmethod
+    def get_handle(protocol, *args, **kwargs):
+        """Returns an instance of a MailboxHandler based on the protocol"""
+
+        if protocol == MB_IMAP4:
+            return IMAPHandler(*args, **kwargs)
+        elif protocol == MB_POP3:
+            return POPHandler(*args, **kwargs)
+
+        return None
+
     @property
     def secure_port(self):
         return -1
@@ -185,13 +196,13 @@ class Command(BaseCommand):
 
     option_list = BaseCommand.option_list + (
         make_option('--protocol', dest='protocol', default=MB_IMAP4, help='Protocol to use to check for email'),
-        make_option('--host', dest='host', default=None),
-        make_option('--port', dest='port', default=None),
-        make_option('--keyfile', dest='keyfile', default=None),
-        make_option('--certfile', dest='certfile', default=None),
-        make_option('--username', dest='username', default=None),
-        make_option('--password', dest='password', default=None),
-        make_option('--ssl', action='store_true', dest='ssl', default=False),
+        make_option('--host', dest='host', default=None, help='IP or name of mail server'),
+        make_option('--port', dest='port', default=None, help='Port used to connect to mail server'),
+        make_option('--keyfile', dest='keyfile', default=None, help='File containing a PEM formatted private key for SSL connections'),
+        make_option('--certfile', dest='certfile', default=None, help='File containing a certificate chain for SSL connections'),
+        make_option('--username', dest='username', default=None, help='Username to authenticate with mail server'),
+        make_option('--password', dest='password', default=None, help='Password to authenticate with mail server'),
+        make_option('--ssl', action='store_true', dest='ssl', default=False, help='Use to specify that the connection must be made using SSL'),
     )
 
     def log(self, message, level=2):
@@ -218,40 +229,33 @@ class Command(BaseCommand):
 
         handle = None
         try:
-            handle = self.get_mail_handle(protocol, host, port, username, password, keyfile, certfile, ssl)
+            self.log('Creating mailbox handle')
+            handle = MailboxHandler.get_handle(protocol, host, port, username, password, keyfile, certfile, ssl)
 
             self.log('Fetching messages')
             messages = handle.fetch()
-            created = self.create_articles(messages)
 
-            self.log('Deleting consumed messages')
-            handle.delete_messages(created)
+            if len(messages):
+                self.log('Fetching messages')
+                created = self.create_articles(messages)
+
+                if len(created):
+                    self.log('Deleting consumed messages')
+                    handle.delete_messages(created)
+                else:
+                    self.log('No articles created')
+            else:
+                self.log('No messages fetched')
         except socket.error:
             self.log('Failed to communicate with mail server.  Please verify your settings.', 0)
         finally:
             if handle:
                 try:
                     handle.disconnect()
+                    self.log('Disconnected.')
                 except socket.error:
                     # probably means we couldn't connect to begin with
                     pass
-
-    def get_mail_handle(self, protocol, *args, **kwargs):
-        """
-        Returns a handle to either an IMAP4 or POP3 mailbox (or None if
-        something weird happens)
-        """
-
-        self.log('Creating handle to mail server')
-
-        if protocol == MB_IMAP4:
-            self.log('Creating IMAP4 handle')
-            return IMAPHandler(*args, **kwargs)
-        else:
-            self.log('Creating POP3 handle')
-            return POPHandler(*args, **kwargs)
-
-        return None
 
     def get_email_content(self, email):
         """Attempts to extract an email's content"""
