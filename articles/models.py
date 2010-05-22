@@ -9,6 +9,7 @@ from django.template.defaultfilters import slugify, striptags
 from django.utils.translation import ugettext_lazy as _
 from datetime import datetime
 from base64 import encodestring
+import mimetypes
 import re
 import urllib
 
@@ -339,4 +340,18 @@ class Attachment(models.Model):
     article = models.ForeignKey(Article, related_name='attachments')
     attachment = models.FileField(upload_to=upload_to)
     caption = models.CharField(max_length=255, blank=True)
+
+    @property
+    def filename(self):
+        return self.attachment.name.split('/')[-1]
+
+    @property
+    def content_type_class(self):
+        mt = mimetypes.guess_type(self.attachment.path)[0]
+        if mt:
+            content_type = mt.replace('/', '_')
+        else:
+            content_type = 'text_plain'
+
+        return content_type
 
