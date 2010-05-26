@@ -17,6 +17,7 @@ from articles.models import Article, Attachment, MARKUP_HTML, MARKUP_MARKDOWN, M
 
 MB_IMAP4 = 'IMAP4'
 MB_POP3 = 'POP3'
+ACCEPTABLE_TYPES = ('text/plain', 'text/html')
 
 class MailboxHandler(object):
 
@@ -262,8 +263,23 @@ class Command(BaseCommand):
 
         if email.is_multipart():
             self.log('Extracting email contents from multipart message')
-            for pl in email.get_payload():
-                if pl.get_content_type() in ('text/plain', 'text/html') and pl.get_filename() is None:
+
+            magic_type = 'multipart/alternative'
+            payload_types = dict((p.get_content_type(), i) for i, p in enumerate(email.get_payload()))
+            if magic_type in payload_types.keys():
+                self.log('Found magic content type: %s' % magic_type)
+                index = payload_types[magic_type]
+                payload = email.get_payload()[index].get_payload()
+            else:
+                payload = email.get_payload()
+
+            for pl in payload:
+                print pl.get_filename(), pl.get_content_type()
+                if pl.get_filename() is not None:
+                    # it's an attached file
+                    continue
+
+                if pl.get_content_type() in ACCEPTABLE_TYPES:
                     return pl.get_payload()
         else:
             return email.get_payload()
