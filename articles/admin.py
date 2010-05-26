@@ -58,7 +58,24 @@ class ArticleAdmin(admin.ModelAdmin):
         queryset.update(is_active=False)
     mark_inactive.short_description = _('Mark select articles as inactive')
 
-    actions = (mark_active, mark_inactive)
+    def get_actions(self, request):
+        actions = super(ArticleAdmin, self).get_actions(request)
+
+        def dynamic(name, status):
+            def status_func(self, request, queryset):
+                queryset.update(status=status)
+
+            status_func.__name__ = name
+            status_func.short_description = _('Set status of selected to "%s"' % status)
+            return status_func
+
+        for status in ArticleStatus.objects.all():
+            name = 'mark_status_%i' % status.id
+            actions[name] = (dynamic(name, status), name, _('Set status of selected to "%s"' % status))
+
+        return actions
+
+    actions = [mark_active, mark_inactive]
 
     def save_model(self, request, obj, form, change):
         """Set the article's author based on the logged in user and make sure at least one site is selected"""

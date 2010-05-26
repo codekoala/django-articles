@@ -100,7 +100,10 @@ class ArticleStatus(models.Model):
         verbose_name_plural = _('Article statuses')
 
     def __unicode__(self):
-        return self.name
+        if self.is_live:
+            return u'%s (live)' % self.name
+        else:
+            return self.name
 
 class ArticleManager(models.Manager):
     def active(self):
@@ -373,7 +376,7 @@ class Attachment(models.Model):
     caption = models.CharField(max_length=255, blank=True)
 
     class Meta:
-        ordering = ('-article', 'pk')
+        ordering = ('-article', 'id')
 
     def __unicode__(self):
         return u'%s: %s' % (self.article, self.caption)
