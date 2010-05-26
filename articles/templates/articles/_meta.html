@@ -28,14 +28,14 @@
     {% if article.use_addthis_button and article.addthis_username %}
     <!-- AddThis Button BEGIN -->
     <div>
-        <script type="text/javascript">var addthis_pub="{{ article.addthis_username }}";</script>
+        <script type="application/javascript">var addthis_pub="{{ article.addthis_username }}";</script>
         <a href="http://www.addthis.com/bookmark.php?v=20" onmouseover="return addthis_open(this, '', '[URL]', '[TITLE]')" onmouseout="addthis_close()" onclick="return addthis_sendto()"><img src="http://s7.addthis.com/static/btn/lg-share-en.gif" width="125" height="16" alt="Bookmark and Share" style="border:0"/></a>
-        <script type="text/javascript" src="http://s7.addthis.com/js/200/addthis_widget.js"></script>
+        <script type="application/javascript" src="http://s7.addthis.com/js/200/addthis_widget.js"></script>
     </div>
     <!-- AddThis Button END -->
     {% endif %}
 
-    <script type="text/javascript" src="http://tweetmeme.com/i/scripts/button.js"></script>
+    <script type="application/javascript" src="http://tweetmeme.com/i/scripts/button.js"></script>
 
     <h4>{% trans 'Tags' %}</h4>
     <p>{% if article.tags.count %}{% for tag in article.tags.all %}<a href="{{ tag.get_absolute_url }}">{{ tag.name }}</a> {% endfor %}{% else %}None{% endif %}</p>

@@ -84,3 +84,4 @@ try:
 except:
     # the user probably doesn't have pygments installed
     pass
+
