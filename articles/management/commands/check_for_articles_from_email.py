@@ -274,7 +274,6 @@ class Command(BaseCommand):
                 payload = email.get_payload()
 
             for pl in payload:
-                print pl.get_filename(), pl.get_content_type()
                 if pl.get_filename() is not None:
                     # it's an attached file
                     continue
