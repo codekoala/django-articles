@@ -13,7 +13,7 @@
         "model": "articles.articlestatus", 
         "fields": {
             "name": "Finished",
-            "ordering": 0,
+            "ordering": 1,
             "is_live": 1
         }
     }

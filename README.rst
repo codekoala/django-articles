@@ -10,11 +10,12 @@ Features
 * Ability to post in the future
 * Article expiration facilities
 * Articles from email
+* Article statuses--"draft" and "finished" are there by default
 * Allows articles to be written in plain text/HTML or using Markdown,
   ReStructured Text, or Textile markup
 * Related articles
 * Follow-up articles
-* Disqus comments
+* Comments by Disqus
 * Article archive, with pagination
 * Internationalization-ready
 * Detects links in articles and creates a per-article index for you
@@ -213,6 +214,23 @@ Example configuration::
         'markup': 'r',
         'acknowledge': True,
     }
+
+Article Statuses
+================
+
+As of ``1.9.6``, you may specify the state of an article when you save it.
+This allows you to begin composing an article, save it, and come back later to
+finish it.  In the past, this behavior was handled by not setting a publish
+date for the article.  However, saving an unfinished article with a non-live
+status allows superusers to view the article on the site as though it were
+live.  In the future, I plan to allow authors to view non-live versions of
+their articles.
+
+The default status for an article will always be the Article Status object with
+the lowest ``ordering`` value.  This includes negative integers.  If you want
+all articles to be ``Finished`` by default, go ahead and update the
+``ordering`` on that object to be less than the ``ordering`` value for the
+``Draft`` object (and/or any others you create).
 
 Good luck!  Please contact me with any questions or concerns you have with the
 project!

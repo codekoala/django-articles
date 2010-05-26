@@ -40,6 +40,14 @@ class ArticleTestCase(TestCase):
 
         self.assertEquals(len(Article.objects.active()), 1)
 
+    def test_default_status(self):
+        """Default status selection"""
+
+        default_status = ArticleStatus.objects.default()
+        other_status = ArticleStatus.objects.exclude(id=default_status.id)[0]
+
+        self.assertTrue(default_status.ordering < other_status.ordering)
+
     def test_tagged_article_status(self):
         """Tagged article status"""
 
