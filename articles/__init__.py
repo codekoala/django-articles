@@ -85,26 +85,3 @@ except:
     # the user probably doesn't have pygments installed
     pass
 
-from docutils import nodes
-from docutils.parsers.rst import directives, Directive
-
-class Attach(Directive):
-
-    required_arguments = 1
-    optional_arguments = 0
-    final_argument_whitespace = True
-    option_spec = {
-        'class': directives.unchanged,
-        'height': directives.nonnegative_int,
-        'width': directives.nonnegative_int,
-        'scale': directives.nonnegative_int,
-    }
-    has_content = False
-
-    def run(self):
-        self.options['uri'] = directives.uri(self.arguments[0])
-        attach_node = nodes.image(rawsource=self.block_text, **self.options)
-        return [attach_node]
-
-directives.register_directive('attach', Attach)
-

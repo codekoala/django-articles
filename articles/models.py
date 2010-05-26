@@ -351,6 +351,7 @@ class Attachment(models.Model):
         if mt:
             content_type = mt.replace('/', '_')
         else:
+            # assume everything else is text/plain
             content_type = 'text_plain'
 
         return content_type

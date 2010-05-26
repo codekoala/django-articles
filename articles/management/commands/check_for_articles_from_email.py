@@ -1,3 +1,4 @@
+from base64 import b64decode
 from datetime import datetime
 from email.parser import FeedParser
 from email.utils import parseaddr, parsedate
@@ -12,7 +13,7 @@ from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from django.utils.translation import ugettext_lazy as _
 
-from articles.models import Article, MARKUP_HTML, MARKUP_MARKDOWN, MARKUP_REST, MARKUP_TEXTILE
+from articles.models import Article, Attachment, MARKUP_HTML, MARKUP_MARKDOWN, MARKUP_REST, MARKUP_TEXTILE
 
 MB_IMAP4 = 'IMAP4'
 MB_POP3 = 'POP3'
@@ -262,7 +263,7 @@ class Command(BaseCommand):
         if email.is_multipart():
             self.log('Extracting email contents from multipart message')
             for pl in email.get_payload():
-                if pl.get_content_type() in ('text/plain', 'text/html'):
+                if pl.get_content_type() in ('text/plain', 'text/html') and pl.get_filename() is None:
                     return pl.get_payload()
         else:
             return email.get_payload()
@@ -275,9 +276,10 @@ class Command(BaseCommand):
         created = []
         site = Site.objects.get_current()
 
-        # make sure we have a valid default markup
         ack = self.config.get('acknowledge', False)
         autopost = self.config.get('autopost', False)
+
+        # make sure we have a valid default markup
         markup = self.config.get('markup', MARKUP_HTML)
         if markup not in (MARKUP_HTML, MARKUP_MARKDOWN, MARKUP_REST, MARKUP_TEXTILE):
             markup = MARKUP_HTML
@@ -301,7 +303,7 @@ class Command(BaseCommand):
                 # try to grab the timestamp from the email message
                 publish_date = datetime.fromtimestamp(time.mktime(parsedate(email['Date'])))
             except StandardError, err:
-                self.log("An error occured when I tried to convert the email's timestamp into a datetime object: %s" % (err,))
+                self.log("An error occurred when I tried to convert the email's timestamp into a datetime object: %s" % (err,))
                 publish_date = datetime.now()
 
             # post the article
@@ -322,6 +324,18 @@ class Command(BaseCommand):
                 self.log('Error creating article: %s' % (err,), 0)
                 continue
             else:
+
+                # handle attachments
+                if email.is_multipart():
+                    files = [pl for pl in email.get_payload() if pl.get_filename() is not None]
+                    for att in files:
+                        obj = Attachment(
+                            article=article,
+                            caption=att.get_filename(),
+                        )
+                        obj.attachment.save(obj.caption, ChunkyString(att.get_payload()))
+                        obj.save()
+
                 created.append(num)
 
             if ack:
@@ -340,4 +354,18 @@ class Command(BaseCommand):
                 author.email_user(subject, message)
 
         return created
+
+class ChunkyString(str):
+    """Makes is possible to easily chunk attachments"""
+
+    def chunks(self):
+        i = 0
+        decoded = b64decode(self)
+        while True:
+            l = i
+            i += 1024
+            yield decoded[l:i]
+
+            if i > len(decoded):
+                raise StopIteration
 

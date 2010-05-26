@@ -9,7 +9,7 @@
 {% if forloop.first %}<div id="article-attachments">
     <h3>Attachments</h3>
     <ul>{% endif %}
-        <li class="attachment ct_{{ att.content_type_class }}">
+        <li id="attachment-{{ forloop.counter }}" class="attachment ct_{{ att.content_type_class }}">
             <a href="{{ att.attachment.url }}" class="attachment-link">{{ att.filename }}</a>
             <span class="attachment-size">Size: {{ att.attachment.size|filesizeformat }}</span>
         </li>
