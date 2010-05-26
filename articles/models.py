@@ -372,6 +372,12 @@ class Attachment(models.Model):
     attachment = models.FileField(upload_to=upload_to)
     caption = models.CharField(max_length=255, blank=True)
 
+    class Meta:
+        ordering = ('-article', 'pk')
+
+    def __unicode__(self):
+        return u'%s: %s' % (self.article, self.caption)
+
     @property
     def filename(self):
         return self.attachment.name.split('/')[-1]
