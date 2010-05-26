@@ -4,7 +4,6 @@ from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 from forms import ArticleAdminForm
 from models import Tag, Article, ArticleStatus, Attachment
-from models import Tag, Article, Attachment
 
 class ArticleStatusAdmin(admin.ModelAdmin):
     list_display = ('name', 'is_live')
