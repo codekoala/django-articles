@@ -10,7 +10,7 @@ register = template.Library()
 
 class GetCategoriesNode(template.Node):
     """
-    Retrieves a list of active article tags and places it into the context
+    Retrieves a list of live article tags and places it into the context
     """
     def __init__(self, varname):
         self.varname = varname
@@ -22,7 +22,7 @@ class GetCategoriesNode(template.Node):
 
 def get_article_tags(parser, token):
     """
-    Retrieves a list of active article tags and places it into the context
+    Retrieves a list of live article tags and places it into the context
     """
     args = token.split_contents()
     argc = len(args)
@@ -62,8 +62,10 @@ class GetArticlesNode(template.Node):
         else:
             order = 'publish_date'
 
-        # get the active articles in the appropriate order
-        articles = Article.objects.active().order_by(order).select_related()
+        user = context.get('user', None)
+
+        # get the live articles in the appropriate order
+        articles = Article.objects.live(user=user).order_by(order).select_related()
 
         if self.count:
             # if we have a number of articles to retrieve, pull the first of them
@@ -117,9 +119,10 @@ class GetArticleArchivesNode(template.Node):
         dt_archives = cache.get(cache_key)
         if dt_archives is None:
             archives = {}
+            user = context.get('user', None)
 
-            # iterate over all active articles
-            for article in Article.objects.active().select_related():
+            # iterate over all live articles
+            for article in Article.objects.live(user=user).select_related():
                 pub = article.publish_date
 
                 # see if we already have an article in this year

@@ -21,14 +21,14 @@ def display_blog_page(request, tag=None, username=None, year=None, month=None, p
     context = {}
     if tag:
         tag = get_object_or_404(Tag, name__iexact=tag)
-        articles = tag.article_set.active().select_related()
+        articles = tag.article_set.live(user=request.user).select_related()
         template = 'articles/display_tag.html'
         context['tag'] = tag
 
     elif username:
         # listing articles by a particular author
         user = get_object_or_404(User, username=username)
-        articles = user.article_set.active()
+        articles = user.article_set.live(user=request.user)
         template = 'articles/by_author.html'
         context['author'] = user
 
@@ -36,13 +36,13 @@ def display_blog_page(request, tag=None, username=None, year=None, month=None, p
         # listing articles in a given month and year
         year = int(year)
         month = int(month)
-        articles = Article.objects.active().select_related().filter(publish_date__year=year, publish_date__month=month)
+        articles = Article.objects.live(user=request.user).select_related().filter(publish_date__year=year, publish_date__month=month)
         template = 'articles/in_month.html'
         context['month'] = datetime(year, month, 1)
 
     else:
         # listing articles with no particular filtering
-        articles = Article.objects.active()
+        articles = Article.objects.live(user=request.user)
         template = 'articles/article_list.html'
 
     # paginate the articles
@@ -64,7 +64,7 @@ def display_article(request, year, slug, template='articles/article_detail.html'
     """Displays a single article."""
 
     try:
-        article = Article.objects.active().get(publish_date__year=year, slug=slug)
+        article = Article.objects.live(user=request.user).get(publish_date__year=year, slug=slug)
     except Article.DoesNotExist:
         raise Http404
 

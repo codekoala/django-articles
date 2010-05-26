@@ -40,7 +40,7 @@
     <h4>{% trans 'Tags' %}</h4>
     <p>{% if article.tags.count %}{% for tag in article.tags.all %}<a href="{{ tag.get_absolute_url }}">{{ tag.name }}</a> {% endfor %}{% else %}None{% endif %}</p>
 
-    {% for fu in article.followups.active %}
+    {% for fu in article.followups.live %}
     {% if forloop.first %}<h4 class="hasfollowup-header">{% trans 'Follow-Up Articles' %}</h4>
 
     <ul class="followups">{% endif %}
@@ -50,7 +50,7 @@
     {% if forloop.last %}</ul>{% endif %}
     {% endfor %}
 
-    {% for fu in article.followup_for.active %}
+    {% for fu in article.followup_for.live %}
     {% if forloop.first %}<h4 class="followup-header">{% trans 'Follows Up On' %}</h4>
 
     <ul class="followups">{% endif %}
@@ -60,7 +60,7 @@
     {% if forloop.last %}</ul>{% endif %}
     {% endfor %}
 
-    {% for ra in article.related_articles.active %}
+    {% for ra in article.related_articles.live %}
     {% if forloop.first %}<h4 class="related-header">{% trans 'Related Articles' %}</h4>
 
     <ul class="related-articles">{% endif %}
