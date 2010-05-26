@@ -83,6 +83,24 @@ class Tag(models.Model):
     class Meta:
         ordering = ('name',)
 
+class ArticleStatusManager(models.Manager):
+    def default(self):
+        return self.all()[0]
+
+class ArticleStatus(models.Model):
+    name = models.CharField(max_length=50)
+    ordering = models.IntegerField(default=0)
+    is_live = models.BooleanField(default=False, blank=True)
+
+    objects = ArticleStatusManager()
+
+    class Meta:
+        ordering = ('ordering', 'name')
+        verbose_name_plural = _('Article statuses')
+
+    def __unicode__(self):
+        return self.name
+
 class ArticleManager(models.Manager):
     def active(self):
         """
@@ -96,6 +114,18 @@ class ArticleManager(models.Manager):
                 publish_date__lte=now,
                 is_active=True)
 
+    def live(self, user=None):
+        """Retrieves all live articles"""
+
+        qs = self.active()
+
+        if user is not None and user.is_superuser:
+            # superusers get to see all articles
+            return qs
+        else:
+            # only show live articles to regular users
+            return qs.filter(status__is_live=True)
+
 MARKUP_HELP = _("""Select the type of markup you are using in this article.
 <ul>
 <li><a href="http://daringfireball.net/projects/markdown/basics" target="_blank">Markdown Guide</a></li>
@@ -106,6 +136,7 @@ MARKUP_HELP = _("""Select the type of markup you are using in this article.
 class Article(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique_for_year='publish_date')
+    status = models.ForeignKey(ArticleStatus, default=ArticleStatus.objects.default)
     author = models.ForeignKey(User)
     sites = models.ManyToManyField(Site, blank=True)
 
@@ -305,11 +336,11 @@ class Article(models.Model):
     teaser = property(_get_teaser)
 
     def get_next_article(self):
-        """Determines the next active article"""
+        """Determines the next live article"""
 
         if not self._next:
             try:
-                qs = Article.objects.active().exclude(id__exact=self.id)
+                qs = Article.objects.live().exclude(id__exact=self.id)
                 article = qs.filter(publish_date__gte=self.publish_date).order_by('publish_date')[0]
             except (Article.DoesNotExist, IndexError):
                 article = None
@@ -318,11 +349,11 @@ class Article(models.Model):
         return self._next
 
     def get_previous_article(self):
-        """Determines the previous active article"""
+        """Determines the previous live article"""
 
         if not self._previous:
             try:
-                qs = Article.objects.active().exclude(id__exact=self.id)
+                qs = Article.objects.live().exclude(id__exact=self.id)
                 article = qs.filter(publish_date__lte=self.publish_date).order_by('-publish_date')[0]
             except (Article.DoesNotExist, IndexError):
                 article = None

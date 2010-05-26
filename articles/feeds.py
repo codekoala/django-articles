@@ -22,7 +22,7 @@ class LatestEntries(Feed):
         articles = cache.get(key)
 
         if articles is None:
-            articles = list(Article.objects.active().order_by('-publish_date')[:15])
+            articles = list(Article.objects.live().order_by('-publish_date')[:15])
             cache.set(key, articles, FEED_TIMEOUT)
 
         return articles
@@ -62,7 +62,7 @@ class TagFeed(Feed):
         articles = cache.get(key)
 
         if articles is None:
-            articles = list(obj.article_set.active().order_by('-publish_date'))
+            articles = list(obj.article_set.live().order_by('-publish_date'))
             cache.set(key, articles, FEED_TIMEOUT)
 
         return articles

@@ -1,0 +1,21 @@
+[
+    {
+        "pk": 1, 
+        "model": "articles.articlestatus", 
+        "fields": {
+            "name": "Draft",
+            "ordering": 0,
+            "is_live": 0
+        }
+    },
+    {
+        "pk": 2, 
+        "model": "articles.articlestatus", 
+        "fields": {
+            "name": "Finished",
+            "ordering": 1,
+            "is_live": 1
+        }
+    }
+]
+
