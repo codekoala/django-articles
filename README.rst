@@ -10,6 +10,7 @@ Features
 * Ability to post in the future
 * Article expiration facilities
 * Articles from email
+* Article attachments
 * Article statuses--"draft" and "finished" are there by default
 * Allows articles to be written in plain text/HTML or using Markdown,
   ReStructured Text, or Textile markup
@@ -214,6 +215,14 @@ Example configuration::
         'markup': 'r',
         'acknowledge': True,
     }
+
+Article Attachments
+===================
+
+You can now attach files to your articles and have them be included with the
+article on the site.  Attachments can be created using the Django admin while
+composing your articles.  You may also attach files to emails that you send to
+the special mailbox (described above) if you so desire.
 
 Article Statuses
 ================
