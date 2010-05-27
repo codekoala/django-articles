@@ -86,7 +86,12 @@ class Tag(models.Model):
 
 class ArticleStatusManager(models.Manager):
     def default(self):
-        return self.all()[0]
+        default = self.all()[:1]
+
+        if len(default) == 0:
+            return None
+        else:
+            return default[0]
 
 class ArticleStatus(models.Model):
     name = models.CharField(max_length=50)
