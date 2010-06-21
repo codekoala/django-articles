@@ -47,7 +47,7 @@ class Command(NoArgsCommand):
         url = 'http://disqus.com/api/%s/%s' % (url, additional)
         try:
             handle = urllib2.urlopen(url, data)
-        except urllib2.HTTPError as err:
+        except urllib2.HTTPError, err:
             print 'Failed to %s %s with args %s' % (method, url, args)
             return None
         else:
