@@ -69,13 +69,14 @@ class GetArticlesNode(template.Node):
 
         if self.count:
             # if we have a number of articles to retrieve, pull the first of them
-            articles = articles[:self.count]
+            articles = articles[:int(self.count)]
         else:
             # get a range of articles
             articles = articles[(int(self.start) - 1):int(self.end)]
 
         # don't send back a list when we really don't need/want one
-        if len(articles) == 1 and not self.start: articles = articles[0]
+        if len(articles) == 1 and int(self.count) == 1 and not self.start:
+            articles = articles[0]
 
         # put the article(s) into the context
         context[self.varname] = articles
