@@ -1,2 +1,2 @@
-include LICENSE README.rst
+include LICENSE README.rst requirements.txt
 recursive-include articles *.py *.html *.po *.mo *.gif *.js *.css *.json
