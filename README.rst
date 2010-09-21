@@ -94,10 +94,10 @@ Next, set a couple of settings in your ``settings.py``:
 Also, make sure that you have the following context processors in your
 ``TEMPLATE_CONTEXT_PROCESSORS`` tuple:
 
-    * ``django.contrib.auth.context_processors.auth``
-    * ``django.core.context_processors.i18n``
-    * ``django.core.context_processors.media``
-    * ``django.core.context_processors.request``
+* ``django.contrib.auth.context_processors.auth``
+* ``django.core.context_processors.i18n``
+* ``django.core.context_processors.media``
+* ``django.core.context_processors.request``
 
 Template Integration
 ====================
