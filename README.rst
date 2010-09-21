@@ -91,6 +91,14 @@ Next, set a couple of settings in your ``settings.py``:
 * ``DISQUS_FORUM_SHORTNAME``: The name of your Disqus site.  This is what's
   used to link comments to your site.
 
+Also, make sure that you have the following context processors in your
+``TEMPLATE_CONTEXT_PROCESSORS`` tuple:
+
+    * ``django.contrib.auth.context_processors.auth``
+    * ``django.core.context_processors.i18n``
+    * ``django.core.context_processors.media``
+    * ``django.core.context_processors.request``
+
 Template Integration
 ====================
 
