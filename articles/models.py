@@ -199,6 +199,7 @@ class Article(models.Model):
         """
         Renders the article using the appropriate markup language.
         """
+        using = kwargs.get('using', 'default')
 
         if self.markup == MARKUP_MARKDOWN:
             self.rendered_content = markup.markdown(self.content)
@@ -220,7 +221,7 @@ class Article(models.Model):
             if not len(self.slug.strip()):
                 self.slug = slugify(self.title)
 
-            self.slug = self.get_unique_slug(self.slug)
+            self.slug = self.get_unique_slug(self.slug, using)
 
         super(Article, self).save(*args, **kwargs)
         requires_save = False
@@ -237,13 +238,13 @@ class Article(models.Model):
 
         # we have to have an object before we can create relationships like this
         if not len(self.sites.all()):
-            self.sites = [Site.objects.get_current()]
+            self.sites = [Site.objects.using(using).get(pk=settings.SITE_ID)]
             requires_save = True
 
         if requires_save:
             super(Article, self).save(*args, **kwargs)
 
-    def get_unique_slug(self, slug):
+    def get_unique_slug(self, slug, using):
         """Iterates until a unique slug is found"""
 
         # we need a publish date before we can do anything meaningful
@@ -255,7 +256,7 @@ class Article(models.Model):
         counter = 1
 
         while True:
-            not_unique = Article.objects.filter(publish_date__year=year, slug=slug)
+            not_unique = Article.objects.using(using).filter(publish_date__year=year, slug=slug)
             if len(not_unique) == 0:
                 return slug
 
