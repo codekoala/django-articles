@@ -302,6 +302,9 @@ Auto-tagging is enabled for all articles by default.  If you want to disable it
 by default (and enable it on a per-article basis), set ``ARTICLES_AUTO_TAG`` to
 ``False`` in your ``settings.py`` file.
 
+Auto-Tagging **does not** attempt to produce any keywords that magically
+represent the content of your articles.  Only **existing** tags are used!!
+
 ===================
 Help & Contributing
 ===================

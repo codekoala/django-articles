@@ -88,7 +88,7 @@ class ArticleAdmin(admin.ModelAdmin):
         obj.save()
 
         # this requires an Article object already
-        obj.do_auto_tag()
+        obj.do_auto_tag('default')
         form.cleaned_data['tags'] += list(obj.tags.all())
 
     def queryset(self, request):

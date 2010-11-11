@@ -210,6 +210,15 @@ class Article(models.Model):
 
         super(Article, self).save(*args, **kwargs)
 
+        # do some things that require an ID first
+        requires_save = self.do_auto_tag(using)
+        requires_save |= self.do_tags_to_keywords()
+        requires_save |= self.do_default_site(using)
+
+        if requires_save:
+            # bypass the other processing
+            super(Article, self).save()
+
     def do_render_markup(self):
         """Turns any markup into HTML"""
 
@@ -278,7 +287,7 @@ class Article(models.Model):
 
         return False
 
-    def do_auto_tag(self, using=None):
+    def do_auto_tag(self, using):
         """
         Performs the auto-tagging work if necessary.
 
@@ -291,13 +300,15 @@ class Article(models.Model):
             existing_ids = [t.id for t in self.tags.all()]
             unused = Tag.objects.using(using).exclude(id__in=existing_ids)
             for tag in unused:
-                if re.search(r'\b%s\b' % tag.name, self.content, re.I):
+                regex = re.compile(r'\b%s\b' % tag.name, re.I)
+                if regex.search(self.content) or regex.search(self.title) or \
+                   regex.search(self.description) or regex.search(self.keywords):
                     self.tags.add(tag)
                     found = True
 
         return found
 
-    def do_default_site(self, using=None):
+    def do_default_site(self, using):
         """
         If no site was selected, selects the site used to create the article
         as the default site.
