@@ -103,6 +103,7 @@ INSTALLED_APPS = (
     'django.contrib.syndication',
 
     'articles',
+    'south',
 )
 
 # Change this to be your Disqus site's short name

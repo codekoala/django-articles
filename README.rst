@@ -1,12 +1,16 @@
 .. -*- restructuredtext -*-
 
-django-articles is the blog engine that I use on codekoala.com
+django-articles is a powerful, pluggable blogging application for
+Django-powered sites.  It's also what powers http://www.codekoala.com/ and a
+handful of other awesome sites.
 
 Features
 ========
 
 * Tags for articles, with a tag cloud template tag
 * Auto-completion for tags in the Django admin
+* Auto-tagging: assigning existing tags to articles when they're present in the
+  article content
 * Ability to post in the future
 * Article expiration facilities
 * Articles from email
@@ -23,6 +27,7 @@ Features
 * Word count
 * RSS feeds for the latest articles
 * RSS feeds for the latest articles by tag
+* South migrations
 
 Requirements
 ============
@@ -37,6 +42,11 @@ This project also expects ``django.contrib.sites``, ``django.contrib.admin``,
 ``django.contrib.humanize``, and ``django.contrib.syndication`` to be properly
 installed.
 
+If you plan to use the schema migrations, you'll need to install `South
+<http://south.aeracode.org/>`_.
+
+.. versionadded:: 2.1.0
+
 Installation
 ============
 
@@ -47,8 +57,15 @@ Checkout from Mercurial
 
 Use one of the following commands::
 
-    hg clone http://django-articles.googlecode.com/hg/ django-articles
     hg clone http://bitbucket.org/codekoala/django-articles/
+    hg clone http://django-articles.googlecode.com/hg/ django-articles
+
+Checkout from GitHub
+--------------------
+
+Use the following command::
+
+    git clone http://github.com/codekoala/django-articles.git
 
 The CheeseShop
 --------------
@@ -73,13 +90,15 @@ First of all, you must add this project to your list of ``INSTALLED_APPS`` in
         'django.contrib.sessions',
         'django.contrib.sites',
         'django.contrib.syndication',
-        ... 
+        ...
         'articles',
+        'south',
         ...
     )
 
-Run ``manage.py syncdb``.  This creates a few tables in your database that are
-necessary for operation.
+Run ``python manage.py syncdb``.  This creates a few tables in your database
+that are necessary for operation.  If you choose to use South, you'll probably
+need to run ``python manage.py migrate articles`` instead.
 
 Next, set a couple of settings in your ``settings.py``:
 
@@ -136,10 +155,11 @@ When that's done, you should be able to begin using ``django-articles``!
 Articles From Email
 ===================
 
-.. admonition:: Added In 1.9.2
+.. versionadded:: 1.9.2
 
-    The articles from email feature was added in version **1.9.2**.  It
-    requires Python 2.4 or greater.
+.. admonition:: Version Dependencies
+
+    The articles from email feature requires Python 2.4 or greater.
 
 I've been working on making it possible for ``django-articles`` to post
 articles that you email to a special mailbox.  This seems to be working on the
@@ -227,6 +247,8 @@ Example configuration::
 Article Attachments
 ===================
 
+.. versionadded:: 1.9.6
+
 You can now attach files to your articles and have them be included with the
 article on the site.  Attachments can be created using the Django admin while
 composing your articles.  You may also attach files to emails that you send to
@@ -234,6 +256,8 @@ the special mailbox (described above) if you so desire.
 
 Article Statuses
 ================
+
+.. versionadded:: 1.9.6
 
 As of ``1.9.6``, you may specify the state of an article when you save it.
 This allows you to begin composing an article, save it, and come back later to
@@ -249,6 +273,39 @@ all articles to be ``Finished`` by default, go ahead and update the
 ``ordering`` on that object to be less than the ``ordering`` value for the
 ``Draft`` object (and/or any others you create).
 
-Good luck!  Please contact me with any questions or concerns you have with the
-project!
+Auto-Tagging
+============
 
+.. versionadded:: 2.1.0
+
+The auto-tagging feature allows you to easily apply any of your current tags to
+your articles.  When you save an Article object with auto-tagging enabled for
+that article, ``django-articles`` will go through each of your existing tags to
+see if the entire word appears anywhere in your article's content.  If a match
+is found, that tag will be added to the article.
+
+For example, if you have tags ``test`` and ``art``, and you wrote a new
+auto-tagged Article with the text::
+
+    This is a test article.
+
+``django-articles`` would automatically apply the ``test`` tag to this article,
+but not the ``art`` tag.  It will only apply the ``art`` tag automatically when
+the actual word "art" appears in the content.
+
+Auto-tagging does not remove any tags that are already assigned to an article.
+This means that you can still add tags the good, old-fashioned way in the
+Django Admin without losing them.  Auto-tagging will *only* add to an article's
+existing tags (if needed).
+
+Auto-tagging is enabled for all articles by default.  If you want to disable it
+by default (and enable it on a per-article basis), set ``ARTICLES_AUTO_TAG`` to
+``False`` in your ``settings.py`` file.
+
+===================
+Help & Contributing
+===================
+
+Good luck!  Please contact me with any questions or concerns you have with the
+project!  If you're interested in reporting a bug or feature request, the
+official ticket tracker is at http://bitbucket.org/codekoala/django-articles/

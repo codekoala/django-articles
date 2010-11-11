@@ -27,7 +27,7 @@ class ArticleAdmin(admin.ModelAdmin):
     ]
 
     fieldsets = (
-        (None, {'fields': ('title', 'content', 'tags', 'markup', 'status')}),
+        (None, {'fields': ('title', 'content', 'tags', 'auto_tag', 'markup', 'status')}),
         ('Metadata', {
             'fields': ('keywords', 'description',),
             'classes': ('collapse',)
@@ -86,6 +86,10 @@ class ArticleAdmin(admin.ModelAdmin):
             obj.author = request.user
 
         obj.save()
+
+        # this requires an Article object already
+        obj.do_auto_tag()
+        form.cleaned_data['tags'] += list(obj.tags.all())
 
     def queryset(self, request):
         """Limit the list of articles to article posted by this user unless they're a superuser"""

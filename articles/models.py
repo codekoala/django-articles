@@ -14,6 +14,7 @@ import re
 import urllib
 
 WORD_LIMIT = getattr(settings, 'ARTICLES_TEASER_LIMIT', 75)
+AUTO_TAG = getattr(settings, 'ARTICLES_AUTO_TAG', True)
 
 MARKUP_HTML = 'h'
 MARKUP_MARKDOWN = 'm'
@@ -157,6 +158,7 @@ class Article(models.Model):
     rendered_content = models.TextField()
 
     tags = models.ManyToManyField(Tag, help_text=_('Tags that describe this article'), blank=True)
+    auto_tag = models.BooleanField(default=AUTO_TAG, blank=True, help_text=_('Check this if you want to automatically assign any existing tags to this article based on its content.'))
     followup_for = models.ManyToManyField('self', symmetrical=False, blank=True, help_text=_('Select any other articles that this article follows up on.'), related_name='followups')
     related_articles = models.ManyToManyField('self', blank=True)
 
@@ -201,6 +203,17 @@ class Article(models.Model):
         """
         using = kwargs.get('using', 'default')
 
+        self.do_render_markup()
+        self.do_addthis_button()
+        self.do_meta_description()
+        self.do_unique_slug(using)
+
+        super(Article, self).save(*args, **kwargs)
+
+    def do_render_markup(self):
+        """Turns any markup into HTML"""
+
+        original = self.rendered_content
         if self.markup == MARKUP_MARKDOWN:
             self.rendered_content = markup.markdown(self.content)
         elif self.markup == MARKUP_REST:
@@ -210,39 +223,93 @@ class Article(models.Model):
         else:
             self.rendered_content = self.content
 
+        return (self.rendered_content != original)
+
+    def do_addthis_button(self):
+        """Sets the AddThis username for this post"""
+
         # if the author wishes to have an "AddThis" button on this article,
         # make sure we have a username to go along with it.
         if self.use_addthis_button and self.addthis_use_author and not self.addthis_username:
             self.addthis_username = self.author.username
+            return True
 
-        # make sure the slug is always unique for the year this article was posted
+        return False
+
+    def do_unique_slug(self, using):
+        """
+        Ensures that the slug is always unique for the year this article was
+        posted
+        """
+
         if not self.id:
             # make sure we have a slug first
             if not len(self.slug.strip()):
                 self.slug = slugify(self.title)
 
             self.slug = self.get_unique_slug(self.slug, using)
+            return True
 
-        super(Article, self).save(*args, **kwargs)
-        requires_save = False
+        return False
 
-        # if we don't have keywords, use the tags
+    def do_tags_to_keywords(self):
+        """
+        If meta keywords is empty, sets them using the article tags.
+
+        Returns True if an additional save is required, False otherwise.
+        """
+
         if len(self.keywords.strip()) == 0:
             self.keywords = ', '.join([t.name for t in self.tags.all()])
-            requires_save = True
+            return True
 
-        # if we don't have a description, use the teaser
+        return False
+
+    def do_meta_description(self):
+        """
+        If meta description is empty, sets it to the article's teaser.
+
+        Returns True if an additional save is required, False otherwise.
+        """
+
         if len(self.description.strip()) == 0:
             self.description = self.teaser
-            requires_save = True
+            return True
 
-        # we have to have an object before we can create relationships like this
+        return False
+
+    def do_auto_tag(self, using=None):
+        """
+        Performs the auto-tagging work if necessary.
+
+        Returns True if an additional save is required, False otherwise.
+        """
+
+        found = False
+        if self.auto_tag:
+            # don't clobber any existing tags!
+            existing_ids = [t.id for t in self.tags.all()]
+            unused = Tag.objects.using(using).exclude(id__in=existing_ids)
+            for tag in unused:
+                if re.search(r'\b%s\b' % tag.name, self.content, re.I):
+                    self.tags.add(tag)
+                    found = True
+
+        return found
+
+    def do_default_site(self, using=None):
+        """
+        If no site was selected, selects the site used to create the article
+        as the default site.
+
+        Returns True if an additional save is required, False otherwise.
+        """
+
         if not len(self.sites.all()):
-            self.sites = [Site.objects.using(using).get(pk=settings.SITE_ID)]
-            requires_save = True
+            self.sites.add(Site.objects.using(using).get(pk=settings.SITE_ID))
+            return True
 
-        if requires_save:
-            super(Article, self).save(*args, **kwargs)
+        return False
 
     def get_unique_slug(self, slug, using):
         """Iterates until a unique slug is found"""
