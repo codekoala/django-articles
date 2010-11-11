@@ -118,6 +118,11 @@ Also, make sure that you have the following context processors in your
 * ``django.core.context_processors.media``
 * ``django.core.context_processors.request``
 
+.. versionadded:: 2.1.2
+
+If you want to specify the default database to use for ``django-articles``, you
+can specify the ``ARTICLES_DEFAULT_DB`` setting.  This defaults to ``default``.
+
 Template Integration
 ====================
 

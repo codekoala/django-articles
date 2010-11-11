@@ -15,6 +15,7 @@ import urllib
 
 WORD_LIMIT = getattr(settings, 'ARTICLES_TEASER_LIMIT', 75)
 AUTO_TAG = getattr(settings, 'ARTICLES_AUTO_TAG', True)
+DEFAULT_DB = getattr(settings, 'ARTICLES_DEFAULT_DB', 'default')
 
 MARKUP_HTML = 'h'
 MARKUP_MARKDOWN = 'm'
@@ -201,7 +202,7 @@ class Article(models.Model):
         """
         Renders the article using the appropriate markup language.
         """
-        using = kwargs.get('using', 'default')
+        using = kwargs.get('using', DEFAULT_DB)
 
         self.do_render_markup()
         self.do_addthis_button()
@@ -245,7 +246,7 @@ class Article(models.Model):
 
         return False
 
-    def do_unique_slug(self, using):
+    def do_unique_slug(self, using=DEFAULT_DB):
         """
         Ensures that the slug is always unique for the year this article was
         posted
@@ -287,7 +288,7 @@ class Article(models.Model):
 
         return False
 
-    def do_auto_tag(self, using):
+    def do_auto_tag(self, using=DEFAULT_DB):
         """
         Performs the auto-tagging work if necessary.
 
@@ -308,7 +309,7 @@ class Article(models.Model):
 
         return found
 
-    def do_default_site(self, using):
+    def do_default_site(self, using=DEFAULT_DB):
         """
         If no site was selected, selects the site used to create the article
         as the default site.
@@ -322,7 +323,7 @@ class Article(models.Model):
 
         return False
 
-    def get_unique_slug(self, slug, using):
+    def get_unique_slug(self, slug, using=DEFAULT_DB):
         """Iterates until a unique slug is found"""
 
         # we need a publish date before we can do anything meaningful
