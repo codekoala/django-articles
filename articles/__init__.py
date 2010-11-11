@@ -1,6 +1,11 @@
 __version__ = '2.1.0'
 
-import listeners
+try:
+    import listeners
+except ImportError:
+    # this happens when setup.py is grabbing __version__; nothing to worry
+    # about
+    pass
 
 """
 The Pygments reStructuredText directive
