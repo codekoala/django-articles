@@ -308,7 +308,6 @@ by default (and enable it on a per-article basis), set ``ARTICLES_AUTO_TAG`` to
 Auto-Tagging **does not** attempt to produce any keywords that magically
 represent the content of your articles.  Only **existing** tags are used!!
 
-===================
 Help & Contributing
 ===================
 
