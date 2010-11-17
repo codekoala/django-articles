@@ -1,5 +1,3 @@
-.. -*- restructuredtext -*-
-
 django-articles is a powerful, pluggable blogging application for
 Django-powered sites.  It's also what powers http://www.codekoala.com/ and a
 handful of other awesome sites.
@@ -45,7 +43,7 @@ installed.
 If you plan to use the schema migrations, you'll need to install `South
 <http://south.aeracode.org/>`_.
 
-.. versionadded:: 2.1.0
+.. note:: New in 2.1.0
 
 Installation
 ============
@@ -118,7 +116,7 @@ Also, make sure that you have the following context processors in your
 * ``django.core.context_processors.media``
 * ``django.core.context_processors.request``
 
-.. versionadded:: 2.1.2
+.. note:: New in 2.1.2
 
 If you want to specify the default database to use for ``django-articles``, you
 can specify the ``ARTICLES_DEFAULT_DB`` setting.  This defaults to ``default``.
@@ -160,7 +158,7 @@ When that's done, you should be able to begin using ``django-articles``!
 Articles From Email
 ===================
 
-.. versionadded:: 1.9.2
+.. note:: New in 1.9.2
 
 .. admonition:: Version Dependencies
 
@@ -252,7 +250,7 @@ Example configuration::
 Article Attachments
 ===================
 
-.. versionadded:: 1.9.6
+.. note:: New in 1.9.6
 
 You can now attach files to your articles and have them be included with the
 article on the site.  Attachments can be created using the Django admin while
@@ -262,7 +260,7 @@ the special mailbox (described above) if you so desire.
 Article Statuses
 ================
 
-.. versionadded:: 1.9.6
+.. note:: New in 1.9.6
 
 As of ``1.9.6``, you may specify the state of an article when you save it.
 This allows you to begin composing an article, save it, and come back later to
@@ -281,7 +279,7 @@ all articles to be ``Finished`` by default, go ahead and update the
 Auto-Tagging
 ============
 
-.. versionadded:: 2.1.0
+.. note:: New in 2.1.0
 
 The auto-tagging feature allows you to easily apply any of your current tags to
 your articles.  When you save an Article object with auto-tagging enabled for
