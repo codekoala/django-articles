@@ -27,5 +27,6 @@ setup(
         "Topic :: Communications",
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content :: News/Diary",
     ],
+    zip_safe=False,
 )
 
