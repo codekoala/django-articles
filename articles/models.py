@@ -299,7 +299,12 @@ class Article(models.Model):
         if self.auto_tag:
             # don't clobber any existing tags!
             existing_ids = [t.id for t in self.tags.all()]
-            unused = Tag.objects.using(using).exclude(id__in=existing_ids)
+
+            unused = Tag.objects.all()
+            if hasattr(unused, 'using'):
+                unused = unused.using(using)
+            unused = unused.exclude(id__in=existing_ids)
+
             for tag in unused:
                 regex = re.compile(r'\b%s\b' % tag.name, re.I)
                 if regex.search(self.content) or regex.search(self.title) or \
@@ -318,7 +323,10 @@ class Article(models.Model):
         """
 
         if not len(self.sites.all()):
-            self.sites.add(Site.objects.using(using).get(pk=settings.SITE_ID))
+            sites = Site.objects.all()
+            if hasattr(sites, 'using'):
+                sites = sites.using(using)
+            self.sites.add(sites.get(pk=settings.SITE_ID))
             return True
 
         return False
@@ -335,7 +343,11 @@ class Article(models.Model):
         counter = 1
 
         while True:
-            not_unique = Article.objects.using(using).filter(publish_date__year=year, slug=slug)
+            not_unique = Article.objects.all()
+            if hasattr(not_unique, 'using'):
+                not_unique = not_unique.using(using)
+            not_unique = not_unique.filter(publish_date__year=year, slug=slug)
+
             if len(not_unique) == 0:
                 return slug
 
