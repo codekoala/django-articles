@@ -20,7 +20,12 @@ def display_blog_page(request, tag=None, username=None, year=None, month=None, p
 
     context = {}
     if tag:
-        tag = get_object_or_404(Tag, name__iexact=tag)
+        try:
+            tag = get_object_or_404(Tag, slug__iexact=tag)
+        except Http404:
+            # for backwards-compatibility
+            tag = get_object_or_404(Tag, name__iexact=tag)
+
         articles = tag.article_set.live(user=request.user).select_related()
         template = 'articles/display_tag.html'
         context['tag'] = tag

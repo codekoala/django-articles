@@ -266,13 +266,6 @@ def get_page_url(parser, token):
 
     return GetPageURLNode(args[1], varname)
 
-class TagCloudNode(template.Node):
-    def __init__(self, varname):
-        self.varname = varname
-
-    def render(self, context):
-        context[self.varname] = tags
-
 def tag_cloud():
     """Provides the tags with a "weight" attribute to build a tag cloud"""
 

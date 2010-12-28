@@ -1,7 +1,29 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.test.client import Client
 
 from models import Article, ArticleStatus, Tag
+
+class TagTestCase(TestCase):
+    fixtures = ['tags']
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_unicode_tag(self):
+        """Unicode characters in tags (issue #10)"""
+
+        name = u'Căutare avansată'
+        t = Tag.objects.create(name=name)
+        self.assertEqual(t.slug, 'cutare-avansat')
+
+        response = self.client.get(t.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+
+        # make sure older tags still work
+        t2 = Tag.objects.get(pk=2)
+        response = self.client.get(t2.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
 
 class ArticleTestCase(TestCase):
     fixtures = ['users']

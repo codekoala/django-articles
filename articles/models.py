@@ -57,6 +57,7 @@ User.get_name = get_name
 
 class Tag(models.Model):
     name = models.CharField(max_length=64, unique=True)
+    slug = models.CharField(max_length=64, unique=True, null=True, blank=True)
 
     def __unicode__(self):
         return self.name
@@ -65,23 +66,29 @@ class Tag(models.Model):
     def clean_tag(name):
         """Replace spaces with dashes, in case someone adds such a tag manually"""
 
-        name = name.replace(' ', '-')
+        name = name.replace(' ', '-').encode('ascii', 'ignore')
         name = TAG_RE.sub('', name)
         return name.lower().strip()
 
     def save(self, *args, **kwargs):
         """Cleans up any characters I don't want in a URL"""
 
-        self.name = Tag.clean_tag(self.name)
+        self.slug = Tag.clean_tag(self.name)
         super(Tag, self).save(*args, **kwargs)
 
     @models.permalink
     def get_absolute_url(self):
-        return ('articles_display_tag', (self.name,))
+        return ('articles_display_tag', (self.clean,))
+
+    @property
+    def clean(self):
+        """Returns the clean version of the tag"""
+
+        return self.slug or Tag.clean_tag(self.name)
 
     @property
     def rss_name(self):
-        return u'tags/%s' % self.name
+        return u'tags/%s' % self.clean
 
     class Meta:
         ordering = ('name',)

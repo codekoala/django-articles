@@ -2,6 +2,16 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 from models import Article, Tag
 
+def tag(name):
+    """Returns a Tag object for the given name"""
+
+    t = Tag.objects.get_or_create(slug=Tag.clean_tag(name))[0]
+    if not t.name:
+        t.name = name
+        t.save()
+
+    return t
+
 class ArticleAdminForm(forms.ModelForm):
     tags = forms.CharField(initial='', required=False,
                            widget=forms.TextInput(attrs={'size': 100}),
@@ -21,7 +31,6 @@ class ArticleAdminForm(forms.ModelForm):
     def clean_tags(self):
         """Turns the string of tags into a list"""
 
-        tag = lambda n: Tag.objects.get_or_create(name=Tag.clean_tag(n))[0]
         tags = [tag(t) for t in self.cleaned_data['tags'].split()]
         self.cleaned_data['tags'] = tags
         return self.cleaned_data['tags']
