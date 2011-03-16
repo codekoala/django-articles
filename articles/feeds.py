@@ -5,14 +5,24 @@ from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from articles.models import Article, Tag
 
-SITE = Site.objects.get_current()
-
 # default to 24 hours for feed caching
 FEED_TIMEOUT = getattr(settings, 'ARTICLE_FEED_TIMEOUT', 86400)
 
-class LatestEntries(Feed):
+class SiteMixin(object):
+
+    @property
+    def site(self):
+        if not hasattr(self, '_site'):
+            try:
+                self._site = Site.objects.get_current()
+            except AttributeError:
+                self._site = Site(domain='example.com', name='Demo Site')
+
+        return self._site
+
+class LatestEntries(Feed, SiteMixin):
     def title(self):
-        return "%s Articles" % SITE.name
+        return "%s Articles" % (self.site.name,)
 
     def link(self):
         return reverse('articles_archive')
@@ -36,7 +46,7 @@ class LatestEntries(Feed):
     def item_pubdate(self, item):
         return item.publish_date
 
-class TagFeed(Feed):
+class TagFeed(Feed, SiteMixin):
     def get_object(self, bits):
         if len(bits) != 1:
             raise FeedDoesNotExist
@@ -44,7 +54,7 @@ class TagFeed(Feed):
         return Tag.objects.get(name__iexact=bits[0])
 
     def title(self, obj):
-        return "%s: Newest Articles Tagged '%s'" % (SITE.name, obj.name)
+        return "%s: Newest Articles Tagged '%s'" % (self.site.name, obj.name)
 
     def link(self, obj):
         if not obj:
