@@ -81,14 +81,14 @@ class Tag(models.Model):
         return ('articles_display_tag', (self.clean,))
 
     @property
-    def clean(self):
+    def cleaned(self):
         """Returns the clean version of the tag"""
 
         return self.slug or Tag.clean_tag(self.name)
 
     @property
     def rss_name(self):
-        return u'tags/%s' % self.clean
+        return u'tags/%s' % self.cleaned
 
     class Meta:
         ordering = ('name',)
