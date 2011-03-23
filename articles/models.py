@@ -78,7 +78,7 @@ class Tag(models.Model):
 
     @models.permalink
     def get_absolute_url(self):
-        return ('articles_display_tag', (self.clean,))
+        return ('articles_display_tag', (self.cleaned,))
 
     @property
     def cleaned(self):
