@@ -109,6 +109,7 @@ Next, set a couple of settings in your ``settings.py``:
   used to link comments to your site.
 
 Less frequently changed settings:
+
 * ``ARTICLES_TEASER_LIMIT``: The number of words to display in the teaser. Defaults to ``75``.
 * ``ARTICLES_AUTO_TAG``: Whether or not to automatically tag articles. Defaults to ``True``.
 * ``ARTICLES_DEFAULT_DB``: Database in which to store articles. Defaults to ``default``.
