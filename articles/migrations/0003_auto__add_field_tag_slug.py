@@ -12,7 +12,8 @@ class Migration(SchemaMigration):
         db.add_column('articles_tag', 'slug', self.gf('django.db.models.fields.CharField')(default='', max_length=64, null=True, blank=True), keep_default=False)
 
         # find all tags with an empty slug
-        for tag in orm.Tag.objects.filter(slug=''):
+        from articles.models import Tag
+        for tag in Tag.objects.filter(slug=''):
             # trigger the automatic slug population
             tag.save()
 
