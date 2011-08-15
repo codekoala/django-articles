@@ -40,12 +40,12 @@ class ArticleAdminForm(forms.ModelForm):
 
     class Media:
         css = {
-            'all': ('css/jquery.autocomplete.css',),
+            'all': ('/css/jquery.autocomplete.css',),
         }
         js = (
-            'js/jquery-1.4.1.min.js',
-            'js/jquery.bgiframe.min.js',
-            'js/jquery.autocomplete.pack.js',
-            'js/tag_autocomplete.js',
+            '/js/jquery-1.4.1.min.js',
+            '/js/jquery.bgiframe.min.js',
+            '/js/jquery.autocomplete.pack.js',
+            '/js/tag_autocomplete.js',
         )
 
