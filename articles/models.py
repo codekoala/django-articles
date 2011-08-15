@@ -17,6 +17,7 @@ from django.utils.translation import ugettext_lazy as _
 WORD_LIMIT = getattr(settings, 'ARTICLES_TEASER_LIMIT', 75)
 AUTO_TAG = getattr(settings, 'ARTICLES_AUTO_TAG', True)
 DEFAULT_DB = getattr(settings, 'ARTICLES_DEFAULT_DB', 'default')
+LOOKUP_LINK_TITLE = getattr(settings, 'ARTICLES_LOOKUP_LINK_TITLE', True)
 
 MARKUP_HTML = 'h'
 MARKUP_MARKDOWN = 'm'
@@ -381,19 +382,21 @@ class Article(models.Model):
 
             # look in the cache for the link target's title
             if not cache.get(key):
-                try:
-                    # open the URL
-                    c = urllib.urlopen(url)
-                    html = c.read()
-                    c.close()
+                title = link.group(2)
 
-                    # try to determine the title of the target
-                    title = TITLE_RE.search(html)
-                    if title: title = title.group(1)
-                    else: title = link.group(2)
-                except:
-                    # if anything goes wrong (ie IOError), use the link's text
-                    title = link.group(2)
+                if LOOKUP_LINK_TITLE:
+                    try:
+                        # open the URL
+                        c = urllib.urlopen(url)
+                        html = c.read()
+                        c.close()
+
+                        # try to determine the title of the target
+                        title = TITLE_RE.search(html)
+                        if title: title = title.group(1)
+                    except:
+                        # if anything goes wrong (ie IOError), use the link's text
+                        pass
 
                 # cache the page title for a week
                 cache.set(key, title, 604800)
