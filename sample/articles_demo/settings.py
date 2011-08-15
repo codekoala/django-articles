@@ -104,6 +104,8 @@ INSTALLED_APPS = (
 
     'articles',
     'south',
+
+    'django_coverage',
 )
 
 # Change this to be your Disqus site's short name

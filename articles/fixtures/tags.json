@@ -3,14 +3,16 @@
         "pk": 1,
         "model": "articles.tag",
         "fields": {
-            "name": "Demo"
+            "name": "Demo",
+            "slug": "demo"
         }
     },
     {
         "pk": 2,
         "model": "articles.tag",
         "fields": {
-            "name": "This Is A Test"
+            "name": "This Is A Test",
+            "slug": "this-is-a-test"
         }
     }
 ]

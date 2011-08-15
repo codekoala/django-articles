@@ -1,5 +1,6 @@
 from base64 import encodestring
 from datetime import datetime
+import logging
 import mimetypes
 import re
 import urllib
@@ -37,21 +38,32 @@ DEFAULT_ADDTHIS_USER = getattr(settings, 'DEFAULT_ADDTHIS_USER', None)
 
 # regex used to find links in an article
 LINK_RE = re.compile('<a.*?href="(.*?)".*?>(.*?)</a>', re.I|re.M)
-TITLE_RE = re.compile('<title>(.*?)</title>', re.I|re.M)
+TITLE_RE = re.compile('<title.*?>(.*?)</title>', re.I|re.M)
 TAG_RE = re.compile('[^a-z0-9\-_\+\:\.]?', re.I)
+
+log = logging.getLogger(__file__)
 
 def get_name(user):
     """
     Provides a way to fall back to a user's username if their full name has not
     been entered.
     """
+
     key = 'username_for_%s' % user.id
+
+    log.debug('Looking for "%s" in cache (%s)' % (key, user))
     name = cache.get(key)
     if not name:
+        log.debug('Name not found')
+
         if len(user.get_full_name().strip()):
+            log.debug('Using full name')
             name = user.get_full_name()
         else:
+            log.debug('Using username')
             name = user.username
+
+        log.debug('Caching %s as "%s" for a while' % (key, name))
         cache.set(key, name, 86400)
 
     return name
@@ -70,11 +82,15 @@ class Tag(models.Model):
 
         name = name.replace(' ', '-').encode('ascii', 'ignore')
         name = TAG_RE.sub('', name)
-        return name.lower().strip()
+        clean = name.lower().strip()
+
+        log.debug('Cleaned tag "%s" to "%s"' % (name, clean))
+        return clean
 
     def save(self, *args, **kwargs):
         """Cleans up any characters I don't want in a URL"""
 
+        log.debug('Ensuring that tag "%s" has a slug' % (self,))
         self.slug = Tag.clean_tag(self.name)
         super(Tag, self).save(*args, **kwargs)
 
@@ -96,6 +112,7 @@ class Tag(models.Model):
         ordering = ('name',)
 
 class ArticleStatusManager(models.Manager):
+
     def default(self):
         default = self.all()[:1]
 
@@ -122,10 +139,11 @@ class ArticleStatus(models.Model):
             return self.name
 
 class ArticleManager(models.Manager):
+
     def active(self):
         """
-        Retrieves all active articles which have been published and have not yet
-        expired.
+        Retrieves all active articles which have been published and have not
+        yet expired.
         """
         now = datetime.now()
         return self.get_query_set().filter(
@@ -185,9 +203,7 @@ class Article(models.Model):
     objects = ArticleManager()
 
     def __init__(self, *args, **kwargs):
-        """
-        Make sure that we have some rendered content to use.
-        """
+        """Makes sure that we have some rendered content to use"""
 
         super(Article, self).__init__(*args, **kwargs)
 
@@ -208,9 +224,8 @@ class Article(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        """
-        Renders the article using the appropriate markup language.
-        """
+        """Renders the article using the appropriate markup language."""
+
         using = kwargs.get('using', DEFAULT_DB)
 
         self.do_render_markup()
@@ -372,51 +387,48 @@ class Article(models.Model):
         used as the title.  Once a title is determined, it is cached for a week
         before it will be requested again.
         """
-        links = {}
-        keys = []
+
+        links = []
 
         # find all links in the article
+        log.debug('Locating links in article: %s' % (self,))
         for link in LINK_RE.finditer(self.rendered_content):
             url = link.group(1)
+            log.debug('Do we have a title for "%s"?' % (url,))
             key = 'href_title_' + encodestring(url).strip()
 
             # look in the cache for the link target's title
-            if not cache.get(key):
+            title = cache.get(key)
+            if title is None:
+                log.debug('Nope... Getting it and caching it.')
                 title = link.group(2)
 
                 if LOOKUP_LINK_TITLE:
                     try:
+                        log.debug('Looking up title for URL: %s' % (url,))
                         # open the URL
                         c = urllib.urlopen(url)
                         html = c.read()
                         c.close()
 
                         # try to determine the title of the target
-                        title = TITLE_RE.search(html)
-                        if title: title = title.group(1)
+                        title_m = TITLE_RE.search(html)
+                        if title_m:
+                            title = title_m.group(1)
+                            log.debug('Found title: %s' % (title,))
                     except:
                         # if anything goes wrong (ie IOError), use the link's text
-                        pass
+                        log.warn('Failed to retrieve the title for "%s"; using link text "%s"' % (url, title))
 
                 # cache the page title for a week
+                log.debug('Using "%s" as title for "%s"' % (title, url))
                 cache.set(key, title, 604800)
 
-            # get the link target's title from cache
-            val = cache.get(key)
-            if val:
-                # add it to the list of links and titles
-                links[url] = val
+            # add it to the list of links and titles
+            if url not in (l[0] for l in links):
+                links.append((url, title))
 
-                # don't duplicate links to the same page
-                if url not in keys: keys.append(url)
-
-        # now go thru and sort the links according to where they appear in the
-        # article
-        sorted = []
-        for key in keys:
-            sorted.append((key, links[key]))
-
-        return tuple(sorted)
+        return tuple(links)
     links = property(_get_article_links)
 
     def _get_word_count(self):
