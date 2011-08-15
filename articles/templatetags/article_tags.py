@@ -75,7 +75,7 @@ class GetArticlesNode(template.Node):
             articles = articles[(int(self.start) - 1):int(self.end)]
 
         # don't send back a list when we really don't need/want one
-        if len(articles) == 1 and int(self.count) == 1 and not self.start:
+        if len(articles) == 1 and not self.start and int(self.count) == 1:
             articles = articles[0]
 
         # put the article(s) into the context
