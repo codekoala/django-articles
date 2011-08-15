@@ -9,8 +9,15 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
 
         # Adding field 'Tag.slug'
-        db.add_column('articles_tag', 'slug', self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=64, null=True, blank=True), keep_default=False)
+        db.add_column('articles_tag', 'slug', self.gf('django.db.models.fields.CharField')(default='', max_length=64, null=True, blank=True), keep_default=False)
 
+        # find all tags with an empty slug
+        for tag in orm.Tag.objects.filter(slug=''):
+            # trigger the automatic slug population
+            tag.save()
+
+        # now add the unique constraint
+        db.alter_column('articles_tag', 'slug', self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=64, null=True, blank=True))
 
     def backwards(self, orm):
 
