@@ -5,6 +5,7 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import Client
 
+from forms import ArticleAdminForm
 from models import Article, ArticleStatus, Tag, MARKUP_HTML
 
 class ArticleUtilMixin(object):
@@ -197,6 +198,7 @@ class ArticleAdminTest(TestCase, ArticleUtilMixin):
             'title': 'A new article',
             'slug': 'new-article',
             'content': 'Some content',
+            'tags': 'this is a test',
             'status': ArticleStatus.objects.default().id,
             'markup': MARKUP_HTML,
             'publish_date_0': '2011-08-15',
@@ -248,14 +250,42 @@ class FeedTest(TestCase, ArticleUtilMixin):
     def test_latest_entries(self):
         """Makes sure the latest entries feed works"""
 
-        self.client.get(reverse('articles_feed', args=['latest']))
-        self.client.get(reverse('articles_feed_atom', args=['latest']))
+        res = self.client.get(reverse('articles_feed', args=['latest']))
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.get(reverse('articles_feed_atom', args=['latest']))
+        self.assertEqual(res.status_code, 200)
 
     def test_tags(self):
         """Makes sure that the tags feed works"""
 
-        self.client.get(reverse('articles_feed', args=['tags/demo']))
-        self.client.get(reverse('articles_feed', args=['tags/demo/']))
+        res = self.client.get(reverse('articles_feed', args=['tags/demo']))
+        self.assertEqual(res.status_code, 200)
 
-        self.client.get(reverse('articles_feed_atom', args=['tags/demo']))
-        self.client.get(reverse('articles_feed_atom', args=['tags/demo/']))
+        res = self.client.get(reverse('articles_feed', args=['tags/demo/']))
+        self.assertEqual(res.status_code, 404)
+
+        res = self.client.get(reverse('articles_feed_atom', args=['tags/demo']))
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.get(reverse('articles_feed_atom', args=['tags/demo/']))
+        self.assertEqual(res.status_code, 404)
+
+class FormTest(TestCase, ArticleUtilMixin):
+    fixtures = ['users',]
+
+    def setUp(self):
+        self.client = Client()
+
+        User.objects.create_superuser('admin', 'admin@admin.com', 'admin')
+        self.client.login(username='admin', password='admin')
+
+    def tearDown(self):
+        pass
+
+    def test_article_admin_form(self):
+        """Makes sure the ArticleAdminForm works as expected"""
+
+        a = self.new_article('Sample', 'sample')
+        res = self.client.get(reverse('admin:articles_article_change', args=[a.id]))
+        self.assertEqual(res.status_code, 200)
