@@ -1,14 +1,20 @@
 from django.conf.urls.defaults import *
 from django.contrib.syndication.views import feed
-from django.views.generic import date_based, list_detail
+
 from articles import views
-from articles.feeds import TagFeed, LatestEntries
+from articles.feeds import TagFeed, LatestEntries, TagFeedAtom, LatestEntriesAtom
 
 feeds = {
   'latest': LatestEntries,
   'tags': TagFeed
 }
 feed_dict = {'feed_dict': feeds}
+
+atom_feeds = {
+    'latest': LatestEntriesAtom,
+    'tags': TagFeedAtom,
+}
+atom_dict = {'feed_dict': atom_feeds}
 
 urlpatterns = patterns('',
     (r'^(?P<year>\d{4})/(?P<month>.{3})/(?P<day>\d{1,2})/(?P<slug>.*)/$', views.redirect_to_article),
@@ -32,6 +38,7 @@ urlpatterns += patterns('',
     url(r'^ajax/tag/autocomplete/$', views.ajax_tag_autocomplete, name='articles_tag_autocomplete'),
 
     # RSS
+    url(r'^feeds/atom/(?P<url>.*)\.xml$', feed, atom_dict, name='articles_feed_atom'),
     (r'^feeds/(?P<url>.*)/$', feed, feed_dict),
     url(r'^feeds/(?P<url>.*)\.rss$', feed, feed_dict, name='articles_feed'),
 

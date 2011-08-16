@@ -3,7 +3,7 @@
 from django.contrib.auth.models import User, Permission
 from django.core.urlresolvers import reverse
 from django.test import TestCase
-from django.test.client import Client, RequestFactory
+from django.test.client import Client
 
 from models import Article, ArticleStatus, Tag, MARKUP_HTML
 
@@ -120,7 +120,6 @@ class ArticleAdminTest(TestCase, ArticleUtilMixin):
 
     def setUp(self):
         self.client = Client()
-        self.factory = RequestFactory()
 
         User.objects.create_superuser('admin', 'admin@admin.com', 'admin')
         self.client.login(username='admin', password='admin')
@@ -235,3 +234,28 @@ class ArticleAdminTest(TestCase, ArticleUtilMixin):
         self.client.login(username='admin', password='admin')
         res = self.client.get(reverse('admin:articles_article_changelist'))
         self.assertEqual(res.content.count('_selected_action'), 10)
+
+class FeedTest(TestCase, ArticleUtilMixin):
+    fixtures = ['tags', 'users']
+
+    def setUp(self):
+        self.client = Client()
+
+        status = ArticleStatus.objects.filter(is_live=True)[0]
+        self.new_article('This is a test!', 'Testing testing 1 2 3',
+                         tags=Tag.objects.all(), status=status)
+
+    def test_latest_entries(self):
+        """Makes sure the latest entries feed works"""
+
+        self.client.get(reverse('articles_feed', args=['latest']))
+        self.client.get(reverse('articles_feed_atom', args=['latest']))
+
+    def test_tags(self):
+        """Makes sure that the tags feed works"""
+
+        self.client.get(reverse('articles_feed', args=['tags/demo']))
+        self.client.get(reverse('articles_feed', args=['tags/demo/']))
+
+        self.client.get(reverse('articles_feed_atom', args=['tags/demo']))
+        self.client.get(reverse('articles_feed_atom', args=['tags/demo/']))

@@ -3,6 +3,8 @@ from django.contrib.syndication.feeds import Feed, FeedDoesNotExist
 from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
+from django.utils.feedgenerator import Atom1Feed
+
 from articles.models import Article, Tag
 
 # default to 24 hours for feed caching
@@ -13,14 +15,12 @@ class SiteMixin(object):
     @property
     def site(self):
         if not hasattr(self, '_site'):
-            try:
-                self._site = Site.objects.get_current()
-            except AttributeError:
-                self._site = Site(domain='example.com', name='Demo Site')
+            self._site = Site.objects.get_current()
 
         return self._site
 
 class LatestEntries(Feed, SiteMixin):
+
     def title(self):
         return "%s Articles" % (self.site.name,)
 
@@ -40,13 +40,11 @@ class LatestEntries(Feed, SiteMixin):
     def item_author_name(self, item):
         return item.author.username
 
-    def item_tags(self, item):
-        return [c.name for c in item.tags.all()] + [keyword.strip() for keyword in item.keywords.split(',')]
-
     def item_pubdate(self, item):
         return item.publish_date
 
 class TagFeed(Feed, SiteMixin):
+
     def get_object(self, bits):
         if len(bits) != 1:
             raise FeedDoesNotExist
@@ -57,8 +55,6 @@ class TagFeed(Feed, SiteMixin):
         return "%s: Newest Articles Tagged '%s'" % (self.site.name, obj.name)
 
     def link(self, obj):
-        if not obj:
-            raise FeedDoesNotExist
         return obj.get_absolute_url()
 
     def description(self, obj):
@@ -86,3 +82,8 @@ class TagFeed(Feed, SiteMixin):
     def item_pubdate(self, item):
         return item.publish_date
 
+class LatestEntriesAtom(LatestEntries):
+    feed_type = Atom1Feed
+
+class TagFeedAtom(TagFeed):
+    feed_type = Atom1Feed
