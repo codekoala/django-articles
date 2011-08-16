@@ -1,10 +1,20 @@
 [
     {
-        "pk": 1, 
-        "model": "auth.user", 
+        "pk": 1,
+        "model": "auth.user",
         "fields": {
             "username": "superuser",
             "is_superuser": 1
+        }
+    },
+    {
+        "pk": 2,
+        "model": "auth.user",
+        "fields": {
+            "username": "jim",
+            "password": "bob",
+            "first_name": "Jim",
+            "last_name": "Bob"
         }
     }
 ]

@@ -487,6 +487,7 @@ class Article(models.Model):
 
     class Meta:
         ordering = ('-publish_date', 'title')
+        get_latest_by = 'publish_date'
 
 class Attachment(models.Model):
     upload_to = lambda inst, fn: 'attach/%s/%s/%s' % (datetime.now().year, inst.article.slug, fn)
