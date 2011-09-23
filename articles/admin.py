@@ -4,6 +4,13 @@ from django.utils.translation import ugettext_lazy as _
 from forms import ArticleAdminForm
 from models import Tag, Article, ArticleStatus, Attachment
 
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'article_count')
+
+    def article_count(self, obj):
+        return obj.article_set.count()
+    article_count.short_description = _('Applied To')
+
 class ArticleStatusAdmin(admin.ModelAdmin):
     list_display = ('name', 'is_live')
     list_filter = ('is_live',)
@@ -98,7 +105,7 @@ class ArticleAdmin(admin.ModelAdmin):
         else:
             return self.model._default_manager.filter(author=request.user)
 
-admin.site.register(Tag)
+admin.site.register(Tag, TagAdmin)
 admin.site.register(Article, ArticleAdmin)
 admin.site.register(ArticleStatus, ArticleStatusAdmin)
 

@@ -106,7 +106,7 @@ class Tag(models.Model):
 
     @property
     def rss_name(self):
-        return u'tags/%s' % self.cleaned
+        return self.cleaned
 
     class Meta:
         ordering = ('name',)

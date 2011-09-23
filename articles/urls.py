@@ -1,20 +1,12 @@
 from django.conf.urls.defaults import *
-from django.contrib.syndication.views import feed
 
 from articles import views
 from articles.feeds import TagFeed, LatestEntries, TagFeedAtom, LatestEntriesAtom
 
-feeds = {
-  'latest': LatestEntries,
-  'tags': TagFeed
-}
-feed_dict = {'feed_dict': feeds}
-
-atom_feeds = {
-    'latest': LatestEntriesAtom,
-    'tags': TagFeedAtom,
-}
-atom_dict = {'feed_dict': atom_feeds}
+tag_rss = TagFeed()
+latest_rss = LatestEntries()
+tag_atom = TagFeedAtom()
+latest_atom = LatestEntriesAtom()
 
 urlpatterns = patterns('',
     (r'^(?P<year>\d{4})/(?P<month>.{3})/(?P<day>\d{1,2})/(?P<slug>.*)/$', views.redirect_to_article),
@@ -38,8 +30,13 @@ urlpatterns += patterns('',
     url(r'^ajax/tag/autocomplete/$', views.ajax_tag_autocomplete, name='articles_tag_autocomplete'),
 
     # RSS
-    url(r'^feeds/atom/(?P<url>.*)\.xml$', feed, atom_dict, name='articles_feed_atom'),
-    (r'^feeds/(?P<url>.*)/$', feed, feed_dict),
-    url(r'^feeds/(?P<url>.*)\.rss$', feed, feed_dict, name='articles_feed'),
+    url(r'^feeds/latest\.rss$', latest_rss, name='articles_rss_feed_latest'),
+    url(r'^feeds/latest/$', latest_rss),
+    url(r'^feeds/tag/(?P<slug>[\w_-]+)\.rss$', tag_rss, name='articles_rss_feed_tag'),
+    url(r'^feeds/tag/(?P<slug>[\w_-]+)/$', tag_rss),
+
+    # Atom
+    url(r'^feeds/atom/latest\.xml$', latest_atom, name='articles_atom_feed_latest'),
+    url(r'^feeds/atom/tag/(?P<slug>[\w_-]+)\.xml$', tag_atom, name='articles_atom_feed_tag'),
 
 )
