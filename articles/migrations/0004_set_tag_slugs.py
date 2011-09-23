@@ -6,16 +6,21 @@ from django.db import models
 
 class Migration(SchemaMigration):
 
+    no_dry_run = True
+
     def forwards(self, orm):
+        """Finds all tags with an empty slug and populates it"""
 
-        # Adding field 'Tag.slug'
-        db.add_column('articles_tag', 'slug', self.gf('django.db.models.fields.CharField')(default='', max_length=64, null=True, blank=True), keep_default=False)
+        for tag in orm.Tag.objects.filter(slug__isnull=True):
+            tag.save()
 
+        for tag in orm.Tag.objects.filter(slug=''):
+            tag.save()
 
     def backwards(self, orm):
+        """Not important this time"""
 
-        # Deleting field 'Tag.slug'
-        db.delete_column('articles_tag', 'slug')
+        pass
 
 
     models = {
@@ -62,7 +67,7 @@ class Migration(SchemaMigration):
             'Meta': {'ordering': "('name',)", 'object_name': 'Tag'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '64'}),
-            'slug': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '64'})
+            'slug': ('django.db.models.fields.CharField', [], {'max_length': '64', 'unique': 'True', 'null': 'True', 'blank': 'True'})
         },
         'auth.group': {
             'Meta': {'object_name': 'Group'},

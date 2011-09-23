@@ -7,15 +7,15 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        """Adds the unique constraint on tag slugs"""
 
-        # Adding field 'Tag.slug'
-        db.add_column('articles_tag', 'slug', self.gf('django.db.models.fields.CharField')(default='', max_length=64, null=True, blank=True), keep_default=False)
+        db.alter_column('articles_tag', 'slug', self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=64, null=True, blank=True))
 
 
     def backwards(self, orm):
+        """Drops the unique constraint"""
 
-        # Deleting field 'Tag.slug'
-        db.delete_column('articles_tag', 'slug')
+        db.alter_column('articles_tag', 'slug', self.gf('django.db.models.fields.CharField')(default='', unique=False, max_length=64, null=True, blank=True))
 
 
     models = {
@@ -62,7 +62,7 @@ class Migration(SchemaMigration):
             'Meta': {'ordering': "('name',)", 'object_name': 'Tag'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '64'}),
-            'slug': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '64'})
+            'slug': ('django.db.models.fields.CharField', [], {'max_length': '64', 'unique': 'True', 'null': 'True', 'blank': 'True'})
         },
         'auth.group': {
             'Meta': {'object_name': 'Group'},
