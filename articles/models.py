@@ -15,6 +15,8 @@ from django.conf import settings
 from django.template.defaultfilters import slugify, striptags
 from django.utils.translation import ugettext_lazy as _
 
+from decorators import logtime, once_per_instance
+
 WORD_LIMIT = getattr(settings, 'ARTICLES_TEASER_LIMIT', 75)
 AUTO_TAG = getattr(settings, 'ARTICLES_AUTO_TAG', True)
 DEFAULT_DB = getattr(settings, 'ARTICLES_DEFAULT_DB', 'default')
@@ -41,7 +43,7 @@ LINK_RE = re.compile('<a.*?href="(.*?)".*?>(.*?)</a>', re.I|re.M)
 TITLE_RE = re.compile('<title.*?>(.*?)</title>', re.I|re.M)
 TAG_RE = re.compile('[^a-z0-9\-_\+\:\.]?', re.I)
 
-log = logging.getLogger(__file__)
+log = logging.getLogger('articles.models')
 
 def get_name(user):
     """
@@ -312,6 +314,8 @@ class Article(models.Model):
 
         return False
 
+    @logtime
+    @once_per_instance
     def do_auto_tag(self, using=DEFAULT_DB):
         """
         Performs the auto-tagging work if necessary.
@@ -319,22 +323,27 @@ class Article(models.Model):
         Returns True if an additional save is required, False otherwise.
         """
 
+        if not self.auto_tag:
+            log.debug('Article "%s" (ID: %s) is not marked for auto-tagging. Skipping.' % (self.title, self.pk))
+            return False
+
+        # don't clobber any existing tags!
+        existing_ids = [t.id for t in self.tags.all()]
+        log.debug('Article %s already has these tags: %s' % (self.pk, existing_ids))
+
+        unused = Tag.objects.all()
+        if hasattr(unused, 'using'):
+            unused = unused.using(using)
+        unused = unused.exclude(id__in=existing_ids)
+
         found = False
-        if self.auto_tag:
-            # don't clobber any existing tags!
-            existing_ids = [t.id for t in self.tags.all()]
-
-            unused = Tag.objects.all()
-            if hasattr(unused, 'using'):
-                unused = unused.using(using)
-            unused = unused.exclude(id__in=existing_ids)
-
-            for tag in unused:
-                regex = re.compile(r'\b%s\b' % tag.name, re.I)
-                if regex.search(self.content) or regex.search(self.title) or \
-                   regex.search(self.description) or regex.search(self.keywords):
-                    self.tags.add(tag)
-                    found = True
+        to_search = (self.content, self.title, self.description, self.keywords)
+        for tag in unused:
+            regex = re.compile(r'\b%s\b' % tag.name, re.I)
+            if any(regex.search(text) for text in to_search):
+                log.debug('Applying Tag "%s" (%s) to Article %s' % (tag, tag.pk, self.pk))
+                self.tags.add(tag)
+                found = True
 
         return found
 

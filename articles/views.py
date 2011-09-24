@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -10,6 +12,8 @@ from articles.models import Article, Tag
 from datetime import datetime
 
 ARTICLE_PAGINATION = getattr(settings, 'ARTICLE_PAGINATION', 20)
+
+log = logging.getLogger('articles.views')
 
 def display_blog_page(request, tag=None, username=None, year=None, month=None, page=1):
     """
