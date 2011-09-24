@@ -1,4 +1,4 @@
-from base64 import encodestring
+from hashlib import sha1
 from datetime import datetime
 import logging
 import mimetypes
@@ -404,7 +404,7 @@ class Article(models.Model):
         for link in LINK_RE.finditer(self.rendered_content):
             url = link.group(1)
             log.debug('Do we have a title for "%s"?' % (url,))
-            key = 'href_title_' + encodestring(url).strip()
+            key = 'href_title_' + sha1(url).hexdigest()
 
             # look in the cache for the link target's title
             title = cache.get(key)
