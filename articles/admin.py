@@ -1,8 +1,12 @@
+import logging
+
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from forms import ArticleAdminForm
 from models import Tag, Article, ArticleStatus, Attachment
+
+log = logging.getLogger('articles.admin')
 
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'article_count')
@@ -22,8 +26,10 @@ class AttachmentInline(admin.TabularInline):
     max_num = 15
 
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'status', 'author', 'publish_date', 'expiration_date', 'is_active')
-    list_filter = ('author', 'status', 'is_active', 'publish_date', 'expiration_date', 'sites')
+    list_display = ('title', 'tag_count', 'status', 'author', 'publish_date',
+                    'expiration_date', 'is_active')
+    list_filter = ('author', 'status', 'is_active', 'publish_date',
+                   'expiration_date', 'sites')
     list_per_page = 25
     search_fields = ('title', 'keywords', 'description', 'content')
     date_hierarchy = 'publish_date'
@@ -56,6 +62,10 @@ class ArticleAdmin(admin.ModelAdmin):
     filter_horizontal = ('tags', 'followup_for', 'related_articles')
     prepopulated_fields = {'slug': ('title',)}
 
+    def tag_count(self, obj):
+        return str(obj.tags.count())
+    tag_count.short_description = _('Tags')
+
     def mark_active(self, request, queryset):
         queryset.update(is_active=True)
     mark_active.short_description = _('Mark select articles as active')
@@ -67,7 +77,7 @@ class ArticleAdmin(admin.ModelAdmin):
     def get_actions(self, request):
         actions = super(ArticleAdmin, self).get_actions(request)
 
-        def dynamic(name, status):
+        def dynamic_status(name, status):
             def status_func(self, request, queryset):
                 queryset.update(status=status)
 
@@ -77,7 +87,22 @@ class ArticleAdmin(admin.ModelAdmin):
 
         for status in ArticleStatus.objects.all():
             name = 'mark_status_%i' % status.id
-            actions[name] = (dynamic(name, status), name, _('Set status of selected to "%s"' % status))
+            actions[name] = (dynamic_status(name, status), name, _('Set status of selected to "%s"' % status))
+
+        def dynamic_tag(name, tag):
+            def status_func(self, request, queryset):
+                for article in queryset.iterator():
+                    log.debug('Dynamic tagging: applying Tag "%s" to Article "%s"' % (tag, article))
+                    article.tags.add(tag)
+                    article.save()
+
+            status_func.__name__ = name
+            status_func.short_description = _('Apply tag "%s" to selected articles' % tag)
+            return status_func
+
+        for tag in Tag.objects.all():
+            name = 'apply_tag_%s' % tag.pk
+            actions[name] = (dynamic_tag(name, tag), name, _('Apply Tag: %s' % (tag.slug,)))
 
         return actions
 

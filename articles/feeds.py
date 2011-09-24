@@ -45,11 +45,11 @@ class LatestEntries(Feed, SiteMixin):
 
 class TagFeed(Feed, SiteMixin):
 
-    def get_object(self, bits):
-        if len(bits) != 1:
+    def get_object(self, request, slug):
+        try:
+            return Tag.objects.get(slug__iexact=slug)
+        except Tag.DoesNotExist:
             raise FeedDoesNotExist
-
-        return Tag.objects.get(name__iexact=bits[0])
 
     def title(self, obj):
         return "%s: Newest Articles Tagged '%s'" % (self.site.name, obj.name)
