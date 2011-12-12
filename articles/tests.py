@@ -241,7 +241,7 @@ class ArticleAdminTestCase(TestCase, ArticleUtilMixin):
 
         # mark some articles active
         self.client.post(reverse('admin:articles_article_changelist'), {
-            '_selected_action': ['1','2','3'],
+            '_selected_action': Article.objects.all().values_list('id', flat=True)[0:3],
             'index': 0,
             'action': 'mark_active',
         })
@@ -260,7 +260,7 @@ class ArticleAdminTestCase(TestCase, ArticleUtilMixin):
 
         # mark some articles inactive
         self.client.post(reverse('admin:articles_article_changelist'), {
-            '_selected_action': ['1','2','3'],
+            '_selected_action': Article.objects.all().values_list('id', flat=True)[0:3],
             'index': 0,
             'action': 'mark_inactive',
         })
@@ -282,7 +282,7 @@ class ArticleAdminTestCase(TestCase, ArticleUtilMixin):
 
         # mark them with the other status
         self.client.post(reverse('admin:articles_article_changelist'), {
-            '_selected_action': ['1','2'],
+            '_selected_action': Article.objects.all().values_list('id', flat=True),
             'index': 0,
             'action': 'mark_status_%s' % (other_status.id,),
         })
@@ -352,25 +352,25 @@ class FeedTestCase(TestCase, ArticleUtilMixin):
     def test_latest_entries(self):
         """Makes sure the latest entries feed works"""
 
-        res = self.client.get(reverse('articles_feed', args=['latest']))
+        res = self.client.get(reverse('articles_rss_feed_latest'))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('articles_feed_atom', args=['latest']))
+        res = self.client.get(reverse('articles_atom_feed_latest'))
         self.assertEqual(res.status_code, 200)
 
     def test_tags(self):
         """Makes sure that the tags feed works"""
 
-        res = self.client.get(reverse('articles_feed', args=['tags/demo']))
+        res = self.client.get(reverse('articles_rss_feed_tag', args=['demo']))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('articles_feed', args=['tags/demo/']))
+        res = self.client.get(reverse('articles_rss_feed_tag', args=['demox']))
         self.assertEqual(res.status_code, 404)
 
-        res = self.client.get(reverse('articles_feed_atom', args=['tags/demo']))
+        res = self.client.get(reverse('articles_atom_feed_tag', args=['demo']))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('articles_feed_atom', args=['tags/demo/']))
+        res = self.client.get(reverse('articles_atom_feed_tag', args=['demox']))
         self.assertEqual(res.status_code, 404)
 
 class FormTestCase(TestCase, ArticleUtilMixin):
