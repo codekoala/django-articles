@@ -46,6 +46,12 @@ class ArticleAdminForm(forms.ModelForm):
         self.cleaned_data['tags'] = tags
         return self.cleaned_data['tags']
 
+    def save(self, *args, **kwargs):
+        """Remove any old tags that may have been set that we no longer need"""
+        if self.instance.pk:
+            self.instance.tags.clear()
+        return super(ArticleAdminForm, self).save(*args, **kwargs)
+
     class Meta:
         model = Article
 

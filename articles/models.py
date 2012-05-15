@@ -85,7 +85,7 @@ class Tag(models.Model):
 
         name = name.replace(' ', '-').encode('ascii', 'ignore')
         name = TAG_RE.sub('', name)
-        clean = name.lower().strip()
+        clean = name.lower().strip(", ")
 
         log.debug('Cleaned tag "%s" to "%s"' % (name, clean))
         return clean
