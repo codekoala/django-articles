@@ -9,7 +9,7 @@ tag_atom = TagFeedAtom()
 latest_atom = LatestEntriesAtom()
 
 urlpatterns = patterns('',
-    (r'^(?P<year>\d{4})/(?P<month>.{3})/(?P<day>\d{1,2})/(?P<slug>.*)/$', views.redirect_to_article),
+    (r'^(?P<year>\d{4})/(?P<month>\d{4})/(?P<day>\d{1,2})/(?P<slug>.*)/$', views.redirect_to_article),
     url(r'^(?P<year>\d{4})/(?P<month>\d{1,2})/page/(?P<page>\d+)/$', views.display_blog_page, name='articles_in_month_page'),
     url(r'^(?P<year>\d{4})/(?P<month>\d{1,2})/$', views.display_blog_page, name='articles_in_month'),
 )
