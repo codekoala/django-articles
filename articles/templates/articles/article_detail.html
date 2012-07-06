@@ -18,3 +18,24 @@
 {% include 'articles/_comments.html' %}
 
 {% endblock %}
+
+{% block footer %}
+{{ block.super }}
+
+<script type="application/javascript">
+{% if disqus_forum %}
+    //<![CDATA[
+    (function() {
+        var links = document.getElementsByTagName('a');
+        var query = '?';
+        for(var i = 0; i < links.length; i++) {
+        if(links[i].href.indexOf('#disqus_thread') >= 0) {
+            query += 'url' + i + '=' + encodeURIComponent(links[i].href) + '&';
+        }
+        }
+        document.write('<script charset="utf-8" type="application/javascript" src="http://disqus.com/forums/{{ disqus_forum }}/get_num_replies.js' + query + '"></' + 'script>');
+    })();
+    //]]>
+    </script>
+{% endif %}
+{% endblock %}
