@@ -513,7 +513,7 @@ class Attachment(models.Model):
 
     @property
     def content_type_class(self):
-        mt = mimetypes.guess_type(self.attachment.path)[0]
+        mt = mimetypes.guess_type(self.uploadedfile.url)[0]
         if mt:
             content_type = mt.replace('/', '_')
         else:
