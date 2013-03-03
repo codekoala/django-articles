@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from hashlib import sha1
 from datetime import datetime
 import logging
@@ -137,7 +139,7 @@ class ArticleStatus(models.Model):
 
     def __unicode__(self):
         if self.is_live:
-            return u'%s (live)' % self.name
+            return '%s (live)' % self.name
         else:
             return self.name
 
@@ -505,7 +507,7 @@ class Attachment(models.Model):
         ordering = ('-article', 'id')
 
     def __unicode__(self):
-        return u'%s: %s' % (self.article, self.caption)
+        return '%s: %s' % (self.article, self.caption)
 
     @property
     def filename(self):

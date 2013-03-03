@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 from datetime import datetime, timedelta
 
 from django.contrib.auth.models import User, Permission
@@ -42,7 +44,7 @@ class TagTestCase(TestCase):
     def test_unicode_tag(self):
         """Unicode characters in tags (issue #10)"""
 
-        name = u'Căutare avansată'
+        name = 'Căutare avansată'
         t = Tag.objects.create(name=name)
         self.assertEqual(t.slug, 'cutare-avansat')
 
@@ -75,10 +77,10 @@ class ArticleStatusTestCase(TestCase):
 
     def test_instantiation(self):
         _as = ArticleStatus(name='Fake', ordering=5, is_live=True)
-        self.assertEqual(unicode(_as), u'Fake (live)')
+        self.assertEqual(unicode(_as), 'Fake (live)')
 
         _as.is_live = False
-        self.assertEqual(unicode(_as), u'Fake')
+        self.assertEqual(unicode(_as), 'Fake')
 
 class ArticleTestCase(TestCase, ArticleUtilMixin):
     fixtures = ['users']

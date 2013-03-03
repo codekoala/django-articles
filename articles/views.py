@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import logging
 
 from django.conf import settings
@@ -106,7 +108,7 @@ def ajax_tag_autocomplete(request):
             return response
 
         tags = list(Tag.objects.filter(name__istartswith=q)[:10])
-        response = HttpResponse(u'\n'.join(tag.name for tag in tags))
+        response = HttpResponse('\n'.join(tag.name for tag in tags))
         cache.set(key, response, 300)
 
         return response

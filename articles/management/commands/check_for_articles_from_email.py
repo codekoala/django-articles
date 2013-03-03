@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from base64 import b64decode
 from datetime import datetime
 from email.parser import FeedParser
@@ -355,7 +357,7 @@ class Command(BaseCommand):
 
             if ack:
                 # notify the user when the article is posted
-                subject = u'%s: %s' % (_("Article Posted"), title)
+                subject = '%s: %s' % (_("Article Posted"), title)
                 message = _("""Your email (%(title)s) has been posted as an article on %(site_name)s.
 
     http://%(domain)s%(article_url)s""") % {
