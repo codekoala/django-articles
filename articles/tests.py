@@ -172,7 +172,7 @@ the aid of their country. This is just a
 regular paragraph.''', markup=MARKUP_MARKDOWN)
         a.do_render_markup()
 
-        print a.rendered_content
+        print(a.rendered_content)
 
     def test_markup_rest(self):
         """Makes sure reStructuredText works"""
@@ -188,7 +188,7 @@ the aid of their country. This is just a
 regular paragraph.''', markup=MARKUP_REST)
         a.do_render_markup()
 
-        print a.rendered_content
+        print(a.rendered_content)
 
     def test_markup_textile(self):
         """Makes sure textile works"""
@@ -204,7 +204,7 @@ the aid of their country. This is just a
 regular paragraph.''', markup=MARKUP_TEXTILE)
         a.do_render_markup()
 
-        print a.rendered_content
+        print(a.rendered_content)
 
     def test_markup_html(self):
         """Makes sure HTML works (derp)"""

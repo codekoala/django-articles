@@ -210,7 +210,7 @@ class Command(BaseCommand):
 
     def log(self, message, level=2):
         if self.verbosity >= level:
-            print message
+            print(message)
 
     def handle(self, *args, **options):
         """Main entry point for the command"""
