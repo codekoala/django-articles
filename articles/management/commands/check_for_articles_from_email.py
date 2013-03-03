@@ -114,7 +114,7 @@ class IMAPHandler(MailboxHandler):
 
             M.login(self.username, self.password)
             M.select()
-        except socket.error, err:
+        except socket.error as err:
             raise
         else:
             return M
@@ -167,7 +167,7 @@ class POPHandler(MailboxHandler):
 
             M.user(self.username)
             M.pass_(self.password)
-        except socket.error, err:
+        except socket.error as err:
             raise
         else:
             return M
@@ -319,7 +319,7 @@ class Command(BaseCommand):
             try:
                 # try to grab the timestamp from the email message
                 publish_date = datetime.fromtimestamp(time.mktime(parsedate(email['Date'])))
-            except StandardError, err:
+            except StandardError as err:
                 self.log("An error occurred when I tried to convert the email's timestamp into a datetime object: %s" % (err,))
                 publish_date = datetime.now()
 
@@ -336,7 +336,7 @@ class Command(BaseCommand):
             try:
                 article.save()
                 self.log('Article created.')
-            except StandardError, err:
+            except StandardError as err:
                 # log it and move on to the next message
                 self.log('Error creating article: %s' % (err,), 0)
                 continue
