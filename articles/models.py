@@ -15,6 +15,7 @@ from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.conf import settings
 from django.template.defaultfilters import slugify, striptags
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import truncate_html_words
 
@@ -74,11 +75,12 @@ def get_name(user):
     return name
 User.get_name = get_name
 
+@python_2_unicode_compatible
 class Tag(models.Model):
     name = models.CharField(max_length=64, unique=True)
     slug = models.CharField(max_length=64, unique=True, null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @staticmethod
@@ -126,6 +128,7 @@ class ArticleStatusManager(models.Manager):
         else:
             return default[0]
 
+@python_2_unicode_compatible
 class ArticleStatus(models.Model):
     name = models.CharField(max_length=50)
     ordering = models.IntegerField(default=0)
@@ -137,7 +140,7 @@ class ArticleStatus(models.Model):
         ordering = ('ordering', 'name')
         verbose_name_plural = _('Article statuses')
 
-    def __unicode__(self):
+    def __str__(self):
         if self.is_live:
             return '%s (live)' % self.name
         else:
@@ -176,6 +179,7 @@ MARKUP_HELP = _("""Select the type of markup you are using in this article.
 <li><a href="http://thresholdstate.com/articles/4312/the-textile-reference-manual" target="_blank">Textile Guide</a></li>
 </ul>""")
 
+@python_2_unicode_compatible
 class Article(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique_for_year='publish_date')
@@ -225,7 +229,7 @@ class Article(models.Model):
             if not self.rendered_content or not len(self.rendered_content.strip()):
                 self.save()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def save(self, *args, **kwargs):
@@ -496,6 +500,7 @@ class Article(models.Model):
         ordering = ('-publish_date', 'title')
         get_latest_by = 'publish_date'
 
+@python_2_unicode_compatible
 class Attachment(models.Model):
     upload_to = lambda inst, fn: 'attach/%s/%s/%s' % (datetime.now().year, inst.article.slug, fn)
 
@@ -506,7 +511,7 @@ class Attachment(models.Model):
     class Meta:
         ordering = ('-article', 'id')
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s: %s' % (self.article, self.caption)
 
     @property
