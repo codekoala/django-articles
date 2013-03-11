@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load url from future %}
 {% if forloop.first %}<ol class="article-list">{% endif %}
     <li>
         <h3><a href="{{ article.get_absolute_url }}" title="{% trans 'Read this article' %}">{{ article.title }}</a></h3>
