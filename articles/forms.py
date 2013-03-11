@@ -2,7 +2,7 @@ import logging
 
 from django import forms
 from django.utils.translation import ugettext_lazy as _
-from models import Article, Tag
+from .models import Article, Tag
 
 log = logging.getLogger('articles.forms')
 
