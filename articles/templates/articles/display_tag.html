@@ -4,8 +4,8 @@
 {% block title %}{% trans 'Articles Tagged' %}: {{ tag.name }}{% endblock %}
 {% block extra-head %}
 {{ block.super }}
-<link rel="alternate" type="application/rss+xml" title="Blog Articles Tagged '{{ tag.name }}' RSS Feed" href="{% url articles_rss_feed_tag tag.rss_name %}" />
-<link rel="alternate" type="application/atom+xml" title="Blog Articles Tagged '{{ tag.name }}' Atom Feed" href="{% url articles_atom_feed_tag tag.rss_name %}" />
+<link rel="alternate" type="application/rss+xml" title="Blog Articles Tagged '{{ tag.name }}' RSS Feed" href="{% url 'articles_rss_feed_tag' tag.rss_name %}" />
+<link rel="alternate" type="application/atom+xml" title="Blog Articles Tagged '{{ tag.name }}' Atom Feed" href="{% url 'articles_atom_feed_tag' tag.rss_name %}" />
 {% endblock %}
 
 {% block articles-content %}

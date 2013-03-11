@@ -5,7 +5,7 @@
 
   <p><strong>{% trans 'Published' %}</strong>: {{ article.publish_date|naturalday }}</p>
 
-  <p><strong>{% trans 'Author' %}</strong>: <a href="{% url articles_by_author article.author.username %}" title="{% trans 'Read other articles by this author' %}">{{ article.author.get_name }}</a></p>
+  <p><strong>{% trans 'Author' %}</strong>: <a href="{% url 'articles_by_author' article.author.username %}" title="{% trans 'Read other articles by this author' %}">{{ article.author.get_name }}</a></p>
 
   <p><strong>{% trans 'Comments' %}</strong>: <a href="#disqus_thread">&nbsp;</a></p>
 

@@ -4,7 +4,7 @@
         <h3><a href="{{ article.get_absolute_url }}" title="{% trans 'Read this article' %}">{{ article.title }}</a></h3>
         <div class="quiet">
             {% trans 'Posted on' %} {{ article.publish_date|date:"F jS, Y" }}
-            {% trans 'by' %} <a href="{% url articles_by_author article.author.username %}" title="{% trans 'View articles posted by' %} {{ article.author.get_name }}">{{ article.author.get_name }}</a>
+            {% trans 'by' %} <a href="{% url 'articles_by_author' article.author.username %}" title="{% trans 'View articles posted by' %} {{ article.author.get_name }}">{{ article.author.get_name }}</a>
         </div>
     </li>
 {% if forloop.last %}</ol>{% endif %}

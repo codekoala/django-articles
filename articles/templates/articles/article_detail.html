@@ -7,8 +7,8 @@
 {% block extra-head %}
 {{ block.super }}
 {% for tag in article.tags.all %}
-<link rel="alternate" type="application/rss+xml" title="Blog Articles Tagged '{{ tag.name }}' RSS Feed" href="{% url articles_rss_feed_tag tag.rss_name %}" />
-<link rel="alternate" type="application/atom+xml" title="Blog Articles Tagged '{{ tag.name }}' Atom Feed" href="{% url articles_atom_feed_tag tag.rss_name %}" />{% endfor %}
+<link rel="alternate" type="application/rss+xml" title="Blog Articles Tagged '{{ tag.name }}' RSS Feed" href="{% url 'articles_rss_feed_tag' tag.rss_name %}" />
+<link rel="alternate" type="application/atom+xml" title="Blog Articles Tagged '{{ tag.name }}' Atom Feed" href="{% url 'articles_atom_feed_tag' tag.rss_name %}" />{% endfor %}
 {% endblock %}
 
 {% block content %}
