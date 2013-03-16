@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import *
 
-from articles import views
-from articles.feeds import TagFeed, LatestEntries, TagFeedAtom, LatestEntriesAtom
+from . import views
+from .feeds import TagFeed, LatestEntries, TagFeedAtom, LatestEntriesAtom
 
 tag_rss = TagFeed()
 latest_rss = LatestEntries()

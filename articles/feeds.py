@@ -5,7 +5,7 @@ from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.utils.feedgenerator import Atom1Feed
 
-from articles.models import Article, Tag
+from .models import Article, Tag
 
 # default to 24 hours for feed caching
 FEED_TIMEOUT = getattr(settings, 'ARTICLE_FEED_TIMEOUT', 86400)

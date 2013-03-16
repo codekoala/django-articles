@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 from datetime import datetime, timedelta
 
 from django.contrib.auth.models import User, Permission
@@ -7,7 +9,7 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import Client
 
-from models import Article, ArticleStatus, Tag, get_name, MARKUP_HTML, MARKUP_MARKDOWN, MARKUP_REST, MARKUP_TEXTILE
+from .models import Article, ArticleStatus, Tag, get_name, MARKUP_HTML, MARKUP_MARKDOWN, MARKUP_REST, MARKUP_TEXTILE
 
 class ArticleUtilMixin(object):
 
@@ -42,7 +44,7 @@ class TagTestCase(TestCase):
     def test_unicode_tag(self):
         """Unicode characters in tags (issue #10)"""
 
-        name = u'Căutare avansată'
+        name = 'Căutare avansată'
         t = Tag.objects.create(name=name)
         self.assertEqual(t.slug, 'cutare-avansat')
 
@@ -75,10 +77,10 @@ class ArticleStatusTestCase(TestCase):
 
     def test_instantiation(self):
         _as = ArticleStatus(name='Fake', ordering=5, is_live=True)
-        self.assertEqual(unicode(_as), u'Fake (live)')
+        self.assertEqual(unicode(_as), 'Fake (live)')
 
         _as.is_live = False
-        self.assertEqual(unicode(_as), u'Fake')
+        self.assertEqual(unicode(_as), 'Fake')
 
 class ArticleTestCase(TestCase, ArticleUtilMixin):
     fixtures = ['users']
@@ -170,7 +172,7 @@ the aid of their country. This is just a
 regular paragraph.''', markup=MARKUP_MARKDOWN)
         a.do_render_markup()
 
-        print a.rendered_content
+        print(a.rendered_content)
 
     def test_markup_rest(self):
         """Makes sure reStructuredText works"""
@@ -186,7 +188,7 @@ the aid of their country. This is just a
 regular paragraph.''', markup=MARKUP_REST)
         a.do_render_markup()
 
-        print a.rendered_content
+        print(a.rendered_content)
 
     def test_markup_textile(self):
         """Makes sure textile works"""
@@ -202,7 +204,7 @@ the aid of their country. This is just a
 regular paragraph.''', markup=MARKUP_TEXTILE)
         a.do_render_markup()
 
-        print a.rendered_content
+        print(a.rendered_content)
 
     def test_markup_html(self):
         """Makes sure HTML works (derp)"""

@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from base64 import b64decode
 from datetime import datetime
 from email.parser import FeedParser
@@ -112,7 +114,7 @@ class IMAPHandler(MailboxHandler):
 
             M.login(self.username, self.password)
             M.select()
-        except socket.error, err:
+        except socket.error as err:
             raise
         else:
             return M
@@ -165,7 +167,7 @@ class POPHandler(MailboxHandler):
 
             M.user(self.username)
             M.pass_(self.password)
-        except socket.error, err:
+        except socket.error as err:
             raise
         else:
             return M
@@ -208,7 +210,7 @@ class Command(BaseCommand):
 
     def log(self, message, level=2):
         if self.verbosity >= level:
-            print message
+            print(message)
 
     def handle(self, *args, **options):
         """Main entry point for the command"""
@@ -317,7 +319,7 @@ class Command(BaseCommand):
             try:
                 # try to grab the timestamp from the email message
                 publish_date = datetime.fromtimestamp(time.mktime(parsedate(email['Date'])))
-            except StandardError, err:
+            except StandardError as err:
                 self.log("An error occurred when I tried to convert the email's timestamp into a datetime object: %s" % (err,))
                 publish_date = datetime.now()
 
@@ -334,7 +336,7 @@ class Command(BaseCommand):
             try:
                 article.save()
                 self.log('Article created.')
-            except StandardError, err:
+            except StandardError as err:
                 # log it and move on to the next message
                 self.log('Error creating article: %s' % (err,), 0)
                 continue
@@ -355,7 +357,7 @@ class Command(BaseCommand):
 
             if ack:
                 # notify the user when the article is posted
-                subject = u'%s: %s' % (_("Article Posted"), title)
+                subject = '%s: %s' % (_("Article Posted"), title)
                 message = _("""Your email (%(title)s) has been posted as an article on %(site_name)s.
 
     http://%(domain)s%(article_url)s""") % {
