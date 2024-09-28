@@ -9,7 +9,7 @@ setup(
     keywords='django, blog, blogging, engine',
     author='Josh VanderLinden',
     author_email='codekoala at gmail com',
-    url='http://bitbucket.org/codekoala/django-articles/',
+    url='https://github.com/codekoala/django-articles',
     license='BSD',
     package_dir={'articles': 'articles'},
     include_package_data=True,
