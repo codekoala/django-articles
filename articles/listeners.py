@@ -2,8 +2,8 @@ import logging
 
 from django.db.models import signals, Q
 
-from decorators import logtime
-from models import Article, Tag
+from .decorators import logtime
+from .models import Article, Tag
 
 log = logging.getLogger('articles.listeners')
 

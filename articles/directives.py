@@ -34,6 +34,8 @@ Look at the `directive documentation`_ to get all the gory details.
 :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import unicode_literals
+
 # Options
 # ~~~~~~~
 
@@ -66,7 +68,7 @@ try:
             lexer = TextLexer()
         # take an arbitrary option if more than one is given
         formatter = options and VARIANTS[options.keys()[0]] or DEFAULT
-        parsed = highlight(u'\n'.join(content), lexer, formatter)
+        parsed = highlight('\n'.join(content), lexer, formatter)
         parsed = '<div class="codeblock">%s</div>' % parsed
         return [nodes.raw('', parsed, format='html')]
 

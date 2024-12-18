@@ -20,7 +20,7 @@ class Command(NoArgsCommand):
     def handle_noargs(self, **opts):
         if hasattr(settings, 'DISQUS_USER_API_KEY'):
             self.forum_id = self.determine_forum()
-            #print self.get_value_from_api('get_thread_list', {'forum_id': self.forum_id, 'limit': 1000})
+            #print(self.get_value_from_api('get_thread_list', {'forum_id': self.forum_id, 'limit': 1000}))
             self.import_comments(self.forum_id)
         else:
             sys.exit('Please specify your DISQUS_USER_API_KEY in settings.py')
@@ -47,8 +47,8 @@ class Command(NoArgsCommand):
         url = 'http://disqus.com/api/%s/%s' % (url, additional)
         try:
             handle = urllib2.urlopen(url, data)
-        except urllib2.HTTPError, err:
-            print 'Failed to %s %s with args %s' % (method, url, args)
+        except urllib2.HTTPError as err:
+            print('Failed to %s %s with args %s' % (method, url, args))
             return None
         else:
             json_obj = json.loads(handle.read())['message']
@@ -68,12 +68,12 @@ class Command(NoArgsCommand):
             forum_id = None
             while forum_id not in possible_ids:
                 if forum_id is not None:
-                    print 'Invalid forum ID.  Please try again.'
+                    print('Invalid forum ID.  Please try again.')
 
-                print 'You have the following forums on Disqus:\n'
+                print('You have the following forums on Disqus:\n')
 
                 for forum in forums:
-                    print '\t%s. %s' % (forum['id'], forum['name'])
+                    print('\t%s. %s' % (forum['id'], forum['name']))
 
                 forum_id = raw_input('\nInto which forum do you want to import your existing comments? ')
 
@@ -86,7 +86,7 @@ class Command(NoArgsCommand):
         return self._forum_api_key[self.forum_id]
 
     def import_comments(self, forum_id):
-        print 'Importing into forum %s' % self.forum_id
+        print('Importing into forum %s' % self.forum_id)
 
         article_ct = ContentType.objects.get_for_model(Article)
         for comment in Comment.objects.filter(content_type=article_ct):
@@ -102,7 +102,7 @@ class Command(NoArgsCommand):
                     'title': article.title,
                     'url': 'http://%s%s' % (Site.objects.get_current().domain, article.get_absolute_url()),
                 }, method='POST')
-                print 'Created new thread for %s' % article.title
+                print('Created new thread for %s' % article.title)
 
             # create the comment on disqus
             comment_obj = self.get_value_from_api('create_post', {
@@ -117,7 +117,9 @@ class Command(NoArgsCommand):
                 'state': self.get_state(comment)
             }, method='POST')
 
-            print 'Imported comment for %s by %s on %s' % (article, comment.user_name, comment.submit_date)
+            print('Imported comment for %s by %s on %s' % (
+                article, comment.user_name, comment.submit_date)
+            )
 
     def get_state(self, comment):
         """Determines a comment's state on Disqus based on its properties in Django"""

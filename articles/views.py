@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import logging
 
 from django.conf import settings
@@ -8,7 +10,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponsePermanentRedirect, Http404, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-from articles.models import Article, Tag
+from .models import Article, Tag
 from datetime import datetime
 
 ARTICLE_PAGINATION = getattr(settings, 'ARTICLE_PAGINATION', 20)
@@ -106,7 +108,7 @@ def ajax_tag_autocomplete(request):
             return response
 
         tags = list(Tag.objects.filter(name__istartswith=q)[:10])
-        response = HttpResponse(u'\n'.join(tag.name for tag in tags))
+        response = HttpResponse('\n'.join(tag.name for tag in tags))
         cache.set(key, response, 300)
 
         return response

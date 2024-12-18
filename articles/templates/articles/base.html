@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
+{% load url from future %}
 {% load article_tags i18n %}
 
 {% block extra-head %}
 {{ block.super }}
-<link rel="alternate" type="application/rss+xml" title="Latest Blog Articles RSS Feed" href="{% url articles_rss_feed_latest %}" />
-<link rel="alternate" type="application/atom+xml" title="Latest Blog Articles Atom Feed" href="{% url articles_atom_feed_latest %}" />
+<link rel="alternate" type="application/rss+xml" title="Latest Blog Articles RSS Feed" href="{% url 'articles_rss_feed_latest' %}" />
+<link rel="alternate" type="application/atom+xml" title="Latest Blog Articles Atom Feed" href="{% url 'articles_atom_feed_latest' %}" />
 {% endblock %}
 
 {% block content %}
@@ -17,7 +18,7 @@
             <strong>{{ year.0 }}</strong>
             <ul class="months">
             {% for month in year.1 %}
-                <li><a href="{% url articles_in_month month.year,month.month %}" title="{% trans 'View articles posted in this month' %}">{{ month|date:"N" }}</a></li>
+                <li><a href="{% url 'articles_in_month' month.year month.month %}" title="{% trans 'View articles posted in this month' %}">{{ month|date:"N" }}</a></li>
             {% endfor %}
             </ul>
             <div class="clear">&nbsp;</div>
